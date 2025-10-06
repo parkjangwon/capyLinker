@@ -55,6 +55,7 @@ The app supports 10 languages with full UI translation:
   <img src=".github/images/capyLinker1.jpeg" alt="CapyLinker1" width="200"/>
   <img src=".github/images/capyLinker2.jpeg" alt="CapyLinker2" width="200"/>
 </p>
+
 ## 🚀 Getting Started
 
 ### Prerequisites
