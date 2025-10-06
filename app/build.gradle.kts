@@ -14,19 +14,28 @@ android {
         applicationId = "org.parkjw.capylinker"
         minSdk = 26
         targetSdk = 34
-                versionCode = 1
-                versionName = "1.0.0"
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(rootProject.file(project.findProperty("CAPYLINKER_KEYSTORE_FILE") as String? ?: "capylinker-release.jks"))
+            storePassword = project.findProperty("CAPYLINKER_KEYSTORE_PASSWORD") as String? ?: ""
+            keyAlias = project.findProperty("CAPYLINKER_KEY_ALIAS") as String? ?: "capylinker"
+            keyPassword = project.findProperty("CAPYLINKER_KEY_PASSWORD") as String? ?: ""
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
