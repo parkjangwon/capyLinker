@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">CapyLinker</string>
+
+    <!-- Developer Information -->
+    <string name="developer_name">parkjangwon</string>
+    <string name="developer_email">vim@kakao.com</string>
+    <string name="developer_github">https://github.com/parkjangwon/capyLinker</string>
+    <string name="app_version">1.0.0</string>
 </resources>
