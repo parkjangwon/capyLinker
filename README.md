@@ -1,7 +1,7 @@
 # CapyLinker
 
-<p align="center">
-  <img src=".github/images/capyLinkerLogo.png" alt="CapyLinker Logo" width="200"/>
+<p align="left">
+  <img src=".github/images/capyLinkerLogo.png" alt="CapyLinker Logo" width="300"/>
 </p>
 
 **CapyLinker** is an intelligent link management Android app powered by Google's Gemini AI. Save, organize, and analyze your bookmarks with AI-generated summaries and smart tagging.
@@ -51,8 +51,10 @@ The app supports 10 languages with full UI translation:
 
 ## 📸 Screenshots
 
-_[Add screenshots here]_
-
+<p align="left">
+  <img src=".github/images/capyLinker1.jpeg" alt="CapyLinker1" width="200"/>
+  <img src=".github/images/capyLinker2.jpeg" alt="CapyLinker2" width="200"/>
+</p>
 ## 🚀 Getting Started
 
 ### Prerequisites
