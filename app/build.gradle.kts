@@ -1,9 +1,19 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application") version "8.12.0"
     id("org.jetbrains.kotlin.android") version "1.9.22"
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     id("com.google.dagger.hilt.android") version "2.48"
     kotlin("kapt") version "1.9.22"
+}
+
+// local.properties 읽기
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
 android {
