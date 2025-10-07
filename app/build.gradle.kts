@@ -26,7 +26,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "1.1.0"
+        versionName = "1.1.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -35,10 +35,11 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(rootProject.file(project.findProperty("CAPYLINKER_KEYSTORE_FILE") as String? ?: "capylinker-release.jks"))
-            storePassword = project.findProperty("CAPYLINKER_KEYSTORE_PASSWORD") as String? ?: ""
-            keyAlias = project.findProperty("CAPYLINKER_KEY_ALIAS") as String? ?: "capylinker"
-            keyPassword = project.findProperty("CAPYLINKER_KEY_PASSWORD") as String? ?: ""
+            val keystorePath = localProperties.getProperty("CAPYLINKER_KEYSTORE_FILE") ?: "capylinker-release.jks"
+            storeFile = file(rootProject.file(keystorePath))
+            storePassword = localProperties.getProperty("CAPYLINKER_KEYSTORE_PASSWORD") ?: ""
+            keyAlias = localProperties.getProperty("CAPYLINKER_KEY_ALIAS") ?: "capylinker"
+            keyPassword = localProperties.getProperty("CAPYLINKER_KEY_PASSWORD") ?: ""
         }
     }
 
