@@ -15,6 +15,7 @@ class SettingsViewModel @Inject constructor(
     val apiKey: Flow<String> = settingsRepository.apiKey
     val language: Flow<String> = settingsRepository.language
     val theme: Flow<String> = settingsRepository.theme
+    val clipboardAutoAdd: Flow<Boolean> = settingsRepository.clipboardAutoAdd
 
     fun saveApiKey(key: String) {
         viewModelScope.launch {
@@ -31,6 +32,12 @@ class SettingsViewModel @Inject constructor(
     fun saveTheme(theme: String) {
         viewModelScope.launch {
             settingsRepository.saveTheme(theme)
+        }
+    }
+
+    fun setClipboardAutoAdd(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.saveClipboardAutoAdd(enabled)
         }
     }
 }

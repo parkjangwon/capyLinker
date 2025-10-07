@@ -6,6 +6,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.parkjw.capylinker.viewmodel.SettingsViewModel
@@ -98,6 +100,27 @@ fun SettingsScreen(
                         )
                     }
                 }
+            }
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Clipboard Auto-add Settings
+            Text(
+                strings.clipboardAutoAddLabel,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            val clipboardAutoAdd by viewModel.clipboardAutoAdd.collectAsState(initial = true)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = strings.clipboardAutoAddLabel)
+                Switch(
+                    checked = clipboardAutoAdd,
+                    onCheckedChange = { viewModel.setClipboardAutoAdd(it) }
+                )
             }
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))

@@ -3,6 +3,7 @@ package org.parkjw.capylinker.data.repository
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -22,6 +23,7 @@ class SettingsRepository @Inject constructor(
         val GEMINI_API_KEY = stringPreferencesKey("gemini_api_key")
         val LANGUAGE = stringPreferencesKey("language")
         val THEME = stringPreferencesKey("theme")
+        val CLIPBOARD_AUTO_ADD = booleanPreferencesKey("clipboard_auto_add")
     }
 
     val apiKey: Flow<String> = context.dataStore.data
@@ -31,12 +33,17 @@ class SettingsRepository @Inject constructor(
 
     val language: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferencesKeys.LANGUAGE] ?: "ko"
+            preferences[PreferencesKeys.LANGUAGE] ?: "en"
         }
 
     val theme: Flow<String> = context.dataStore.data
         .map { preferences ->
             preferences[PreferencesKeys.THEME] ?: "system"
+        }
+
+    val clipboardAutoAdd: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] ?: true
         }
 
     suspend fun saveApiKey(apiKey: String) {
@@ -54,6 +61,12 @@ class SettingsRepository @Inject constructor(
     suspend fun saveTheme(theme: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME] = theme
+        }
+    }
+
+    suspend fun saveClipboardAutoAdd(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] = enabled
         }
     }
 }

@@ -20,8 +20,16 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     val language = settingsRepository.language
+    val clipboardAutoAdd = settingsRepository.clipboardAutoAdd
+
     private val _showAddDialog = MutableStateFlow(false)
     val showAddDialog: StateFlow<Boolean> = _showAddDialog.asStateFlow()
+
+    private val _showClipboardDialog = MutableStateFlow(false)
+    val showClipboardDialog: StateFlow<Boolean> = _showClipboardDialog.asStateFlow()
+
+    private val _clipboardUrl = MutableStateFlow<String?>(null)
+    val clipboardUrl: StateFlow<String?> = _clipboardUrl.asStateFlow()
 
     private val _selectedTag = MutableStateFlow<String?>(null)
     val selectedTag: StateFlow<String?> = _selectedTag.asStateFlow()
@@ -95,5 +103,34 @@ class HomeViewModel @Inject constructor(
             )
             linkRepository.deleteLink(entity)
         }
+    }
+
+    fun checkClipboard(clipboardText: String?) {
+        viewModelScope.launch {
+            val autoAdd = clipboardAutoAdd.first()
+            if (!autoAdd) return@launch
+
+            if (!clipboardText.isNullOrBlank() && isValidUrl(clipboardText)) {
+                _clipboardUrl.value = clipboardText
+                _showClipboardDialog.value = true
+            }
+        }
+    }
+
+    fun dismissClipboardDialog() {
+        _showClipboardDialog.value = false
+        _clipboardUrl.value = null
+    }
+
+    fun acceptClipboardUrl() {
+        _clipboardUrl.value?.let { url ->
+            saveLink(url)
+        }
+        dismissClipboardDialog()
+    }
+
+    private fun isValidUrl(text: String): Boolean {
+        return text.startsWith("http://", ignoreCase = true) || 
+               text.startsWith("https://", ignoreCase = true)
     }
 }

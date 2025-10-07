@@ -1,6 +1,8 @@
 
 package org.parkjw.capylinker.ui.screens
 
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,16 +44,29 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToSettings: () -> Unit
 ) {
+    val context = LocalContext.current
     val links by viewModel.links.collectAsState()
     val allTags by viewModel.allTags.collectAsState()
     val selectedTag by viewModel.selectedTag.collectAsState()
     val showAddDialog by viewModel.showAddDialog.collectAsState()
+    val showClipboardDialog by viewModel.showClipboardDialog.collectAsState()
+    val clipboardUrl by viewModel.clipboardUrl.collectAsState()
     val expandedLinkUrl = remember { mutableStateOf<String?>(null) }
     val showContextMenu = remember { mutableStateOf<Link?>(null) }
 
     val language by viewModel.language.collectAsState(initial = "en")
     val strings = remember(language) {
         org.parkjw.capylinker.ui.strings.getStrings(language)
+    }
+
+    // 클립보드 확인
+    LaunchedEffect(Unit) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        val clipData = clipboard?.primaryClip
+        if (clipData != null && clipData.itemCount > 0) {
+            val text = clipData.getItemAt(0).text?.toString()
+            viewModel.checkClipboard(text)
+        }
     }
 
     Scaffold(
@@ -134,6 +150,34 @@ fun HomeScreen(
             strings = strings,
             onDismiss = { viewModel.hideAddLinkDialog() },
             onSave = { url -> viewModel.saveLink(url) }
+        )
+    }
+
+    if (showClipboardDialog && clipboardUrl != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissClipboardDialog() },
+            title = { Text(strings.clipboardDetected) },
+            text = {
+                Column {
+                    Text(strings.clipboardMessage)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = clipboardUrl!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.acceptClipboardUrl() }) {
+                    Text(strings.add)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissClipboardDialog() }) {
+                    Text(strings.cancel)
+                }
+            }
         )
     }
 
