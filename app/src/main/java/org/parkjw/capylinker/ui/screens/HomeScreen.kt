@@ -287,6 +287,10 @@ fun HomeScreen(
             onDelete = {
                 viewModel.deleteLink(link)
                 showContextMenu.value = null
+            },
+            onReSummarize = {
+                viewModel.reSummarize(link)
+                showContextMenu.value = null
             }
         )
     }

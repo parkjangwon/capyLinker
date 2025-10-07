@@ -60,7 +60,12 @@ data class AppStrings(
     val backupCreating: String,
     val restoreInProgress: String,
     val appVersion: String,
-    val versionFormat: String
+    val versionFormat: String,
+    val reSummarize: String,
+    val analyzingTitle: String,
+    val analyzingSummary: String,
+    val analysisFailedTitle: String,
+    val analysisFailedSummary: String
 )
 
 // 지원 언어 목록
@@ -137,7 +142,12 @@ val EnglishStrings = AppStrings(
     backupCreating = "Creating backup...",
     restoreInProgress = "Restoring data...",
     appVersion = "App Version",
-    versionFormat = "Version %s (Build %s)"
+    versionFormat = "Version %s (Build %s)",
+    reSummarize = "Re-summarize",
+    analyzingTitle = "Analyzing...",
+    analyzingSummary = "AI analysis in progress...",
+    analysisFailedTitle = "Analysis Failed",
+    analysisFailedSummary = "Failed to analyze: %s"
 )
 
 val KoreanStrings = AppStrings(
@@ -200,7 +210,12 @@ val KoreanStrings = AppStrings(
     backupCreating = "백업 생성 중...",
     restoreInProgress = "데이터 복원 중...",
     appVersion = "앱 버전",
-    versionFormat = "버전 %s (빌드 %s)"
+    versionFormat = "버전 %s (빌드 %s)",
+    reSummarize = "다시 요약",
+    analyzingTitle = "분석 중...",
+    analyzingSummary = "AI가 링크를 분석하고 있습니다...",
+    analysisFailedTitle = "분석 실패",
+    analysisFailedSummary = "분석에 실패했습니다: %s"
 )
 
 val JapaneseStrings = AppStrings(
@@ -263,7 +278,12 @@ val JapaneseStrings = AppStrings(
     backupCreating = "バックアップ作成中...",
     restoreInProgress = "データ復元中...",
     appVersion = "アプリバージョン",
-    versionFormat = "バージョン %s (ビルド %s)"
+    versionFormat = "バージョン %s (ビルド %s)",
+    reSummarize = "再要約",
+    analyzingTitle = "分析中...",
+    analyzingSummary = "AIがリンクを分析しています...",
+    analysisFailedTitle = "分析失敗",
+    analysisFailedSummary = "分析に失敗しました: %s"
 )
 
 val ChineseSimplifiedStrings = AppStrings(
@@ -326,7 +346,12 @@ val ChineseSimplifiedStrings = AppStrings(
     backupCreating = "正在创建备份...",
     restoreInProgress = "正在恢复数据...",
     appVersion = "应用版本",
-    versionFormat = "版本 %s (构建 %s)"
+    versionFormat = "版本 %s (构建 %s)",
+    reSummarize = "重新总结",
+    analyzingTitle = "分析中...",
+    analyzingSummary = "AI分析进行中...",
+    analysisFailedTitle = "分析失败",
+    analysisFailedSummary = "分析失败: %s"
 )
 
 val ChineseTraditionalStrings = AppStrings(
@@ -389,7 +414,12 @@ val ChineseTraditionalStrings = AppStrings(
     backupCreating = "正在建立備份...",
     restoreInProgress = "正在復原資料...",
     appVersion = "應用版本",
-    versionFormat = "版本 %s (組建 %s)"
+    versionFormat = "版本 %s (組建 %s)",
+    reSummarize = "重新總結",
+    analyzingTitle = "分析中...",
+    analyzingSummary = "AI分析進行中...",
+    analysisFailedTitle = "分析失敗",
+    analysisFailedSummary = "分析失敗: %s"
 )
 
 val SpanishStrings = AppStrings(
@@ -452,7 +482,12 @@ val SpanishStrings = AppStrings(
     backupCreating = "Creando copia de seguridad...",
     restoreInProgress = "Restaurando datos...",
     appVersion = "Versión de la aplicación",
-    versionFormat = "Versión %s (Build %s)"
+    versionFormat = "Versión %s (Build %s)",
+    reSummarize = "Re-resumir",
+    analyzingTitle = "Analizando...",
+    analyzingSummary = "Análisis de IA en progreso...",
+    analysisFailedTitle = "Análisis fallido",
+    analysisFailedSummary = "Error al analizar: %s"
 )
 
 val FrenchStrings = AppStrings(
@@ -515,7 +550,12 @@ val FrenchStrings = AppStrings(
     backupCreating = "Création de la sauvegarde...",
     restoreInProgress = "Restauration des données...",
     appVersion = "Version de l'application",
-    versionFormat = "Version %s (Build %s)"
+    versionFormat = "Version %s (Build %s)",
+    reSummarize = "Ré-résumer",
+    analyzingTitle = "Analyse en cours...",
+    analyzingSummary = "Analyse par IA en cours...",
+    analysisFailedTitle = "Analyse échouée",
+    analysisFailedSummary = "Échec de l'analyse: %s"
 )
 
 val GermanStrings = AppStrings(
@@ -578,7 +618,12 @@ val GermanStrings = AppStrings(
     backupCreating = "Sicherung wird erstellt...",
     restoreInProgress = "Daten werden wiederhergestellt...",
     appVersion = "App-Version",
-    versionFormat = "Version %s (Build %s)"
+    versionFormat = "Version %s (Build %s)",
+    reSummarize = "Erneut zusammenfassen",
+    analyzingTitle = "Analysiere...",
+    analyzingSummary = "KI-Analyse läuft...",
+    analysisFailedTitle = "Analyse fehlgeschlagen",
+    analysisFailedSummary = "Analyse fehlgeschlagen: %s"
 )
 
 val RussianStrings = AppStrings(
@@ -641,7 +686,12 @@ val RussianStrings = AppStrings(
     backupCreating = "Создание резервной копии...",
     restoreInProgress = "Восстановление данных...",
     appVersion = "Версия приложения",
-    versionFormat = "Версия %s (Сборка %s)"
+    versionFormat = "Версия %s (Сборка %s)",
+    reSummarize = "Пересказать",
+    analyzingTitle = "Анализ...",
+    analyzingSummary = "Анализ ИИ в процессе...",
+    analysisFailedTitle = "Ошибка анализа",
+    analysisFailedSummary = "Не удалось проанализировать: %s"
 )
 
 val PortugueseStrings = AppStrings(
@@ -704,7 +754,12 @@ val PortugueseStrings = AppStrings(
     backupCreating = "Criando backup...",
     restoreInProgress = "Restaurando dados...",
     appVersion = "Versão do aplicativo",
-    versionFormat = "Versão %s (Build %s)"
+    versionFormat = "Versão %s (Build %s)",
+    reSummarize = "Re-resumir",
+    analyzingTitle = "Analisando...",
+    analyzingSummary = "Análise de IA em andamento...",
+    analysisFailedTitle = "Falha na análise",
+    analysisFailedSummary = "Falha ao analisar: %s"
 )
 
 fun getStrings(language: String): AppStrings {

@@ -7,6 +7,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -23,7 +24,8 @@ fun LinkContextMenu(
     onOpen: () -> Unit,
     onCopyUrl: () -> Unit,
     onShare: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onReSummarize: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -90,6 +92,19 @@ fun LinkContextMenu(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(strings.share)
+                }
+
+                OutlinedButton(
+                    onClick = onReSummarize,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(strings.reSummarize)
                 }
 
                 OutlinedButton(

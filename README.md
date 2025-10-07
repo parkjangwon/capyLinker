@@ -27,6 +27,7 @@
   - **Open**: Launch URL in default browser
   - **Copy URL**: Copy link to clipboard
   - **Share**: Share link via system share menu
+  - **Re-summarize**: Re-run Gemini analysis to get a fresh summary
   - **Delete**: Remove link from collection
 
 ### 🌍 Multi-language Support
@@ -198,6 +199,7 @@ Long-press any link to access quick actions:
 - **Open**: Opens the URL in your default browser
 - **Copy URL**: Copies the link to clipboard
 - **Share**: Share via system share menu
+- **Re-summarize**: Re-run Gemini analysis to get a fresh summary
 - **Delete**: Removes the link from your collection
 
 ### Backup & Restore

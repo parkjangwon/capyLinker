@@ -167,4 +167,10 @@ class HomeViewModel @Inject constructor(
     fun clearSearch() {
         _searchQuery.value = ""
     }
+
+    fun reSummarize(link: Link) {
+        viewModelScope.launch {
+            linkRepository.reSummarize(link.url)
+        }
+    }
 }
