@@ -36,7 +36,12 @@ data class AppStrings(
     val tip: String,
     val quotaTipMessage: String,
     val addLinkDialogDescription: String,
-    val urlLabel: String
+    val urlLabel: String,
+    val linkOptions: String,
+    val open: String,
+    val copyUrl: String,
+    val share: String,
+    val delete: String
 )
 
 // 지원 언어 목록
@@ -89,7 +94,12 @@ val EnglishStrings = AppStrings(
     tip = "💡 Tip",
     quotaTipMessage = "The free tier has limited requests per minute. If you hit the limit, the app will automatically retry after a short delay.",
     addLinkDialogDescription = "The link will be analyzed in the background using Gemini AI.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "Link Options",
+    open = "Open",
+    copyUrl = "Copy URL",
+    share = "Share",
+    delete = "Delete"
 )
 
 val KoreanStrings = AppStrings(
@@ -128,7 +138,12 @@ val KoreanStrings = AppStrings(
     tip = "💡 팁",
     quotaTipMessage = "무료 플랜은 분당 요청 수가 제한되어 있습니다. 제한에 도달하면 앱이 짧은 지연 후 자동으로 재시도합니다.",
     addLinkDialogDescription = "링크는 백그라운드에서 Gemini AI로 분석됩니다.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "링크 옵션",
+    open = "열기",
+    copyUrl = "URL 복사",
+    share = "공유",
+    delete = "삭제"
 )
 
 val JapaneseStrings = AppStrings(
@@ -167,7 +182,12 @@ val JapaneseStrings = AppStrings(
     tip = "💡 ヒント",
     quotaTipMessage = "無料プランは1分あたりのリクエスト数に制限があります。制限に達すると、アプリは短い遅延後に自動的に再試行します。",
     addLinkDialogDescription = "リンクはバックグラウンドでGemini AIによって分析されます。",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "リンクオプション",
+    open = "開く",
+    copyUrl = "URLをコピー",
+    share = "共有",
+    delete = "削除"
 )
 
 val ChineseSimplifiedStrings = AppStrings(
@@ -206,7 +226,12 @@ val ChineseSimplifiedStrings = AppStrings(
     tip = "💡 提示",
     quotaTipMessage = "免费套餐每分钟的请求次数有限。如果达到限制，应用程序将在短暂延迟后自动重试。",
     addLinkDialogDescription = "链接将在后台使用Gemini AI进行分析。",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "链接选项",
+    open = "打开",
+    copyUrl = "复制URL",
+    share = "分享",
+    delete = "删除"
 )
 
 val ChineseTraditionalStrings = AppStrings(
@@ -245,7 +270,12 @@ val ChineseTraditionalStrings = AppStrings(
     tip = "💡 提示",
     quotaTipMessage = "免費方案每分鐘的請求次數有限。如果達到限制，應用程式將在短暫延遲後自動重試。",
     addLinkDialogDescription = "連結將在後台使用Gemini AI進行分析。",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "連結選項",
+    open = "開啟",
+    copyUrl = "複製URL",
+    share = "分享",
+    delete = "刪除"
 )
 
 val SpanishStrings = AppStrings(
@@ -284,7 +314,12 @@ val SpanishStrings = AppStrings(
     tip = "💡 Consejo",
     quotaTipMessage = "El nivel gratuito tiene solicitudes limitadas por minuto. Si alcanza el límite, la aplicación reintentará automáticamente después de un breve retraso.",
     addLinkDialogDescription = "El enlace se analizará en segundo plano usando Gemini AI.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "Opciones de enlace",
+    open = "Abrir",
+    copyUrl = "Copiar URL",
+    share = "Compartir",
+    delete = "Eliminar"
 )
 
 val FrenchStrings = AppStrings(
@@ -323,7 +358,12 @@ val FrenchStrings = AppStrings(
     tip = "💡 Astuce",
     quotaTipMessage = "Le niveau gratuit a des requêtes limitées par minute. Si vous atteignez la limite, l'application réessayera automatiquement après un court délai.",
     addLinkDialogDescription = "Le lien sera analysé en arrière-plan à l'aide de Gemini AI.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "Options du lien",
+    open = "Ouvrir",
+    copyUrl = "Copier l'URL",
+    share = "Partager",
+    delete = "Supprimer"
 )
 
 val GermanStrings = AppStrings(
@@ -362,7 +402,12 @@ val GermanStrings = AppStrings(
     tip = "💡 Tipp",
     quotaTipMessage = "Die kostenlose Stufe hat begrenzte Anfragen pro Minute. Wenn Sie das Limit erreichen, wird die App nach einer kurzen Verzögerung automatisch erneut versuchen.",
     addLinkDialogDescription = "Der Link wird im Hintergrund mit Gemini AI analysiert.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "Link-Optionen",
+    open = "Öffnen",
+    copyUrl = "URL kopieren",
+    share = "Teilen",
+    delete = "Löschen"
 )
 
 val RussianStrings = AppStrings(
@@ -401,7 +446,12 @@ val RussianStrings = AppStrings(
     tip = "💡 Совет",
     quotaTipMessage = "Бесплатный тариф имеет ограниченное количество запросов в минуту. Если вы достигнете лимита, приложение автоматически повторит попытку после короткой задержки.",
     addLinkDialogDescription = "Ссылка будет проанализирована в фоновом режиме с помощью Gemini AI.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "Опции ссылки",
+    open = "Открыть",
+    copyUrl = "Копировать URL",
+    share = "Поделиться",
+    delete = "Удалить"
 )
 
 val PortugueseStrings = AppStrings(
@@ -440,7 +490,12 @@ val PortugueseStrings = AppStrings(
     tip = "💡 Dica",
     quotaTipMessage = "O nível gratuito tem solicitações limitadas por minuto. Se você atingir o limite, o aplicativo tentará novamente automaticamente após um breve atraso.",
     addLinkDialogDescription = "O link será analisado em segundo plano usando Gemini AI.",
-    urlLabel = "URL"
+    urlLabel = "URL",
+    linkOptions = "Opções do link",
+    open = "Abrir",
+    copyUrl = "Copiar URL",
+    share = "Compartilhar",
+    delete = "Excluir"
 )
 
 fun getStrings(language: String): AppStrings {

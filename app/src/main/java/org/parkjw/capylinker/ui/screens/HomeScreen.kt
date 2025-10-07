@@ -184,6 +184,7 @@ fun HomeScreen(
     showContextMenu.value?.let { link ->
         LinkContextMenu(
             link = link,
+            strings = strings,
             onDismiss = { showContextMenu.value = null },
             onOpen = {
                 showContextMenu.value = null

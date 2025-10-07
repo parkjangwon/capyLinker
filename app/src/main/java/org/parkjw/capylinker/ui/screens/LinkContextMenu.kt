@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LinkContextMenu(
     link: Link,
+    strings: org.parkjw.capylinker.ui.strings.AppStrings,
     onDismiss: () -> Unit,
     onOpen: () -> Unit,
     onCopyUrl: () -> Unit,
@@ -28,7 +29,7 @@ fun LinkContextMenu(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Link Options") },
+        title = { Text(strings.linkOptions) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -50,7 +51,7 @@ fun LinkContextMenu(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Open")
+                    Text(strings.open)
                 }
 
                 OutlinedButton(
@@ -68,7 +69,7 @@ fun LinkContextMenu(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Copy URL")
+                    Text(strings.copyUrl)
                 }
 
                 OutlinedButton(
@@ -88,7 +89,7 @@ fun LinkContextMenu(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Share")
+                    Text(strings.share)
                 }
 
                 OutlinedButton(
@@ -104,13 +105,13 @@ fun LinkContextMenu(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Delete")
+                    Text(strings.delete)
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(strings.cancel)
             }
         }
     )
