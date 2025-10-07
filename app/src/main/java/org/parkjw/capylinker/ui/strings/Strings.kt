@@ -58,7 +58,9 @@ data class AppStrings(
     val restoreSuccess: String,
     val restoreFailed: String,
     val backupCreating: String,
-    val restoreInProgress: String
+    val restoreInProgress: String,
+    val appVersion: String,
+    val versionFormat: String
 )
 
 // 지원 언어 목록
@@ -133,7 +135,9 @@ val EnglishStrings = AppStrings(
     restoreSuccess = "Data restored successfully!",
     restoreFailed = "Failed to restore backup. Please check the file.",
     backupCreating = "Creating backup...",
-    restoreInProgress = "Restoring data..."
+    restoreInProgress = "Restoring data...",
+    appVersion = "App Version",
+    versionFormat = "Version %s (Build %s)"
 )
 
 val KoreanStrings = AppStrings(
@@ -194,7 +198,9 @@ val KoreanStrings = AppStrings(
     restoreSuccess = "데이터가 성공적으로 복원되었습니다!",
     restoreFailed = "백업 복원에 실패했습니다. 파일을 확인해주세요.",
     backupCreating = "백업 생성 중...",
-    restoreInProgress = "데이터 복원 중..."
+    restoreInProgress = "데이터 복원 중...",
+    appVersion = "앱 버전",
+    versionFormat = "버전 %s (빌드 %s)"
 )
 
 val JapaneseStrings = AppStrings(
@@ -255,7 +261,9 @@ val JapaneseStrings = AppStrings(
     restoreSuccess = "データが正常に復元されました！",
     restoreFailed = "バックアップの復元に失敗しました。ファイルを確認してください。",
     backupCreating = "バックアップ作成中...",
-    restoreInProgress = "データ復元中..."
+    restoreInProgress = "データ復元中...",
+    appVersion = "アプリバージョン",
+    versionFormat = "バージョン %s (ビルド %s)"
 )
 
 val ChineseSimplifiedStrings = AppStrings(
@@ -316,7 +324,9 @@ val ChineseSimplifiedStrings = AppStrings(
     restoreSuccess = "数据恢复成功！",
     restoreFailed = "备份恢复失败。请检查文件。",
     backupCreating = "正在创建备份...",
-    restoreInProgress = "正在恢复数据..."
+    restoreInProgress = "正在恢复数据...",
+    appVersion = "应用版本",
+    versionFormat = "版本 %s (构建 %s)"
 )
 
 val ChineseTraditionalStrings = AppStrings(
@@ -377,7 +387,9 @@ val ChineseTraditionalStrings = AppStrings(
     restoreSuccess = "資料復原成功！",
     restoreFailed = "備份復原失敗。請檢查檔案。",
     backupCreating = "正在建立備份...",
-    restoreInProgress = "正在復原資料..."
+    restoreInProgress = "正在復原資料...",
+    appVersion = "應用版本",
+    versionFormat = "版本 %s (組建 %s)"
 )
 
 val SpanishStrings = AppStrings(
@@ -438,7 +450,9 @@ val SpanishStrings = AppStrings(
     restoreSuccess = "¡Datos restaurados con éxito!",
     restoreFailed = "Error al restaurar la copia de seguridad. Por favor, verifica el archivo.",
     backupCreating = "Creando copia de seguridad...",
-    restoreInProgress = "Restaurando datos..."
+    restoreInProgress = "Restaurando datos...",
+    appVersion = "Versión de la aplicación",
+    versionFormat = "Versión %s (Build %s)"
 )
 
 val FrenchStrings = AppStrings(
@@ -499,7 +513,9 @@ val FrenchStrings = AppStrings(
     restoreSuccess = "Données restaurées avec succès !",
     restoreFailed = "Échec de la restauration de la sauvegarde. Veuillez vérifier le fichier.",
     backupCreating = "Création de la sauvegarde...",
-    restoreInProgress = "Restauration des données..."
+    restoreInProgress = "Restauration des données...",
+    appVersion = "Version de l'application",
+    versionFormat = "Version %s (Build %s)"
 )
 
 val GermanStrings = AppStrings(
@@ -560,7 +576,9 @@ val GermanStrings = AppStrings(
     restoreSuccess = "Daten erfolgreich wiederhergestellt!",
     restoreFailed = "Fehler beim Wiederherstellen der Sicherung. Bitte überprüfen Sie die Datei.",
     backupCreating = "Sicherung wird erstellt...",
-    restoreInProgress = "Daten werden wiederhergestellt..."
+    restoreInProgress = "Daten werden wiederhergestellt...",
+    appVersion = "App-Version",
+    versionFormat = "Version %s (Build %s)"
 )
 
 val RussianStrings = AppStrings(
@@ -621,7 +639,9 @@ val RussianStrings = AppStrings(
     restoreSuccess = "Данные успешно восстановлены!",
     restoreFailed = "Не удалось восстановить резервную копию. Пожалуйста, проверьте файл.",
     backupCreating = "Создание резервной копии...",
-    restoreInProgress = "Восстановление данных..."
+    restoreInProgress = "Восстановление данных...",
+    appVersion = "Версия приложения",
+    versionFormat = "Версия %s (Сборка %s)"
 )
 
 val PortugueseStrings = AppStrings(
@@ -682,7 +702,9 @@ val PortugueseStrings = AppStrings(
     restoreSuccess = "Dados restaurados com sucesso!",
     restoreFailed = "Falha ao restaurar backup. Por favor, verifique o arquivo.",
     backupCreating = "Criando backup...",
-    restoreInProgress = "Restaurando dados..."
+    restoreInProgress = "Restaurando dados...",
+    appVersion = "Versão do aplicativo",
+    versionFormat = "Versão %s (Build %s)"
 )
 
 fun getStrings(language: String): AppStrings {
