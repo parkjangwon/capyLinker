@@ -53,6 +53,12 @@ class GeminiRepository @Inject constructor(
                     return@withContext analyzeYouTubeVideo(youtubeVideoId, url, maxRetries)
                 }
 
+                // GitHub 리포지토리 확인
+                val githubRepoInfo = extractGitHubRepoInfo(url)
+                if (githubRepoInfo != null) {
+                    return@withContext analyzeGitHubRepo(githubRepoInfo.first, githubRepoInfo.second, url, maxRetries)
+                }
+
                 // Notion 링크 확인
                 if (isNotionUrl(url)) {
                     return@withContext analyzeNotionPage(url, maxRetries)
@@ -281,6 +287,72 @@ class GeminiRepository @Inject constructor(
                url.contains("notion.site", ignoreCase = true)
     }
 
+    private fun isGitHubUrl(url: String): Boolean {
+        return url.contains("github.com", ignoreCase = true)
+    }
+
+    private fun extractGitHubRepoInfo(url: String): Pair<String, String>? {
+        return try {
+            // https://github.com/owner/repo 형식
+            val regex = """github\.com/([^/]+)/([^/?#]+)""".toRegex(RegexOption.IGNORE_CASE)
+            val match = regex.find(url) ?: return null
+            val owner = match.groupValues[1]
+            val repo = match.groupValues[2]
+
+            // owner나 repo가 비어있거나 특수 경로인 경우 제외
+            if (owner.isBlank() || repo.isBlank() || 
+                owner in listOf("features", "topics", "trending", "collections", "events", "explore", "marketplace", "pricing", "sponsors", "settings", "security", "about")) {
+                return null
+            }
+
+            Pair(owner, repo)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun fetchGitHubReadme(owner: String, repo: String): String? {
+        return try {
+            val apiUrl = "https://api.github.com/repos/$owner/$repo/readme"
+            val url = URL(apiUrl)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+
+            // GitHub API 헤더 설정
+            connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
+            connection.setRequestProperty("User-Agent", "CapyLinker-Android-App")
+
+            if (connection.responseCode != 200) {
+                android.util.Log.e("GitHubAPI", "Failed to fetch README: ${connection.responseCode}")
+                return null
+            }
+
+            val reader = BufferedReader(InputStreamReader(connection.inputStream, "UTF-8"))
+            val jsonResponse = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                jsonResponse.append(line)
+            }
+            reader.close()
+
+            // JSON 파싱하여 content 필드 추출
+            val jsonString = jsonResponse.toString()
+            val contentRegex = """"content"\s*:\s*"([^"]+)"""".toRegex()
+            val contentMatch = contentRegex.find(jsonString)
+            val base64Content = contentMatch?.groupValues?.getOrNull(1) ?: return null
+
+            // Base64 디코딩 (줄바꿈 제거 후)
+            val cleanBase64 = base64Content.replace("\\n", "")
+            val decodedBytes = android.util.Base64.decode(cleanBase64, android.util.Base64.DEFAULT)
+            String(decodedBytes, Charsets.UTF_8)
+        } catch (e: Exception) {
+            android.util.Log.e("GitHubAPI", "Error fetching GitHub README", e)
+            null
+        }
+    }
+
     private fun extractYouTubeVideoId(url: String): String? {
         return try {
             // youtu.be/VIDEO_ID 형식
@@ -406,6 +478,105 @@ class GeminiRepository @Inject constructor(
             ogDescRegex.find(htmlContent)?.groupValues?.getOrNull(1) ?: ""
         } catch (e: Exception) {
             ""
+        }
+    }
+
+    private suspend fun analyzeGitHubRepo(owner: String, repo: String, originalUrl: String, maxRetries: Int): AnalysisResult {
+        return try {
+            android.util.Log.d("GitHubAnalysis", "GitHub repository detected: $owner/$repo")
+
+            // GitHub README 내용 가져오기
+            val readmeContent = fetchGitHubReadme(owner, repo)
+
+            if (readmeContent == null) {
+                android.util.Log.e("GitHubAnalysis", "Failed to fetch README")
+                return AnalysisResult(
+                    title = "$owner/$repo",
+                    summary = "Failed to fetch README from GitHub repository.",
+                    tags = listOf("github", "repository"),
+                    thumbnailUrl = "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                )
+            }
+
+            // README 내용이 너무 길면 자르기
+            val truncatedReadme = if (readmeContent.length > 3000) {
+                readmeContent.take(3000) + "..."
+            } else {
+                readmeContent
+            }
+
+            val language = settingsRepository.language.first()
+            val languageInstruction = when (language) {
+                "ko" -> "한국어로 답변해주세요."
+                "en" -> "Please respond in English."
+                "ja" -> "日本語で回答してください。"
+                "zh-CN" -> "请用简体中文回答。"
+                "zh-TW" -> "請用繁體中文回答。"
+                "es" -> "Por favor, responde en español."
+                "fr" -> "Veuillez répondre en français."
+                "de" -> "Bitte antworten Sie auf Deutsch."
+                "ru" -> "Пожалуйста, отвечайте на русском языке."
+                "pt" -> "Por favor, responda em português."
+                else -> "Please respond in English."
+            }
+
+            val prompt = """
+                $languageInstruction
+
+                Analyze the following GitHub repository README and provide:
+                1. A short title that describes the project (one sentence)
+                2. A detailed summary of what this project does (max 200 words)
+                3. 3 relevant keywords or tags related to the project
+
+                Format the output exactly as:
+                TITLE: [Your title in the specified language]
+                SUMMARY: [Your summary in the specified language]
+                TAGS: [tag1,tag2,tag3]
+
+                Repository: $owner/$repo
+                URL: $originalUrl
+
+                README Content:
+                $truncatedReadme
+            """.trimIndent()
+
+            var lastException: Exception? = null
+            repeat(maxRetries) { attempt ->
+                try {
+                    val response = generativeModel!!.generateContent(prompt)
+                    return parseResponse(response, "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png")
+                } catch (e: Exception) {
+                    lastException = e
+                    val errorMessage = e.message ?: ""
+
+                    if (errorMessage.contains("quota", ignoreCase = true) || 
+                        errorMessage.contains("rate limit", ignoreCase = true)) {
+                        val retryDelay = extractRetryDelay(errorMessage)
+                        if (attempt < maxRetries - 1) {
+                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
+                        } else {
+                            return AnalysisResult(
+                                "Quota Exceeded",
+                                "API quota exceeded. Please try again later.",
+                                emptyList(),
+                                "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                            )
+                        }
+                    } else {
+                        throw e
+                    }
+                }
+            }
+
+            AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), null)
+        } catch (e: Exception) {
+            android.util.Log.e("GitHubAnalysis", "Error analyzing GitHub repository", e)
+            AnalysisResult(
+                title = "GitHub Repository",
+                summary = "Failed to analyze GitHub repository: ${e.message}",
+                tags = listOf("github", "error"),
+                thumbnailUrl = null
+            )
         }
     }
 
