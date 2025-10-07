@@ -42,21 +42,29 @@ The app supports 10 languages with full UI translation:
 - Russian (Русский)
 - Portuguese (Português)
 
+### 💾 Data Management
+- **Backup & Restore**: Export all your data (links, settings, API key) to a JSON file
+- **Complete Backup**: Single file contains everything - links, summaries, tags, thumbnails, and all settings
+- **Easy Migration**: Transfer your data between devices or create safety backups
+- **Timestamped Backups**: Automatic filename with date and time (e.g., `capyLinker-backup-202501151430.json`)
+
 ### 🎨 Customization
 - **Theme Options**: System default, Light mode, or Dark mode
 - **Language Settings**: Choose your preferred language (10 languages supported)
+- **Gemini Model Selection**: Choose between Gemini 2.5 Flash Lite, Flash, or Pro models
 - **Clipboard Auto-Add**: Toggle automatic URL detection from clipboard
 - **Persistent Settings**: All preferences are saved locally
 
 ### 🔒 Privacy & Security
 - **100% Local Storage**: All your links, summaries, and tags are stored exclusively on your device
-- **No Cloud Sync**: Your data never leaves your device
+- **No Cloud Sync**: Your data never leaves your device (backup files are stored locally)
 - **No Account Required**: Use the app without any registration or login
 - **No Analytics**: We don't track or collect any user data
 - **Secure API Key Storage**: API keys are encrypted using Android Keystore
+- **User-Controlled Backups**: Backup files are created only when you request them and stored where you choose
 - **Open Source**: Full transparency - inspect the code yourself
 
-> **Your Privacy Matters**: CapyLinker is designed with privacy-first principles. The only external communication is with Google's Gemini API for content analysis, and only when you explicitly save a link.
+> **Your Privacy Matters**: CapyLinker is designed with privacy-first principles. The only external communication is with Google's Gemini API for content analysis, and only when you explicitly save a link. Backup files are JSON format and stored locally - you have complete control over your data.
 
 ## 📸 Screenshots
 
@@ -109,7 +117,11 @@ CapyLinker requires a Google Gemini API key to enable AI-powered features.
 2. Tap the **Settings** icon (⚙️) in the top right
 3. Scroll to **"Gemini API Configuration"**
 4. Paste your API key in the text field
-5. Tap **"Save API Key"**
+5. **Select your preferred Gemini model**:
+   - **Gemini 2.5 Flash Lite** (Default): Fastest, best for most use cases
+   - **Gemini 2.5 Flash**: Balanced speed and quality
+   - **Gemini 2.5 Pro**: Highest quality, slower but more detailed analysis
+6. Tap **"Save API Key"**
 
 > **💡 Tip**: The free tier allows 15 requests per minute. If you hit the rate limit, the app automatically retries after a short delay.
 
@@ -188,13 +200,51 @@ Long-press any link to access quick actions:
 - **Share**: Share via system share menu
 - **Delete**: Removes the link from your collection
 
+### Backup & Restore
+
+#### Creating a Backup
+
+1. Open **Settings** (⚙️)
+2. Scroll to **"Backup & Restore"** section
+3. Tap **"Create Backup"**
+4. Choose a location to save the backup file
+5. Your backup file is created with timestamp: `capyLinker-backup-YYYYMMDDHHMM.json`
+
+**What's included in the backup?**
+- All saved links with titles, summaries, and tags
+- Thumbnail URLs
+- Gemini API key
+- Selected Gemini model
+- Language preference
+- Theme setting
+- Clipboard auto-add preference
+
+#### Restoring from Backup
+
+1. Open **Settings** (⚙️)
+2. Scroll to **"Backup & Restore"** section
+3. Tap **"Restore Backup"**
+4. Select your backup JSON file
+5. All data will be restored and overwrite existing data
+6. A success message will appear when complete
+
+> **⚠️ Warning**: Restoring a backup will **replace all existing data**. Make sure to create a backup of your current data before restoring if you want to keep it.
+
+**Use Cases for Backup:**
+- 📱 **Device Migration**: Moving to a new phone
+- 🔄 **Multiple Devices**: Keep data in sync across devices
+- 💾 **Safety Backup**: Regular backups to prevent data loss
+- 🧪 **Testing**: Try different configurations without losing data
+
 ### Managing Settings
 
 Navigate to Settings (⚙️) to customize:
 - **Language**: Choose your preferred language (10 languages available)
 - **Theme**: Light, Dark, or System default
 - **Clipboard Auto-Add**: Enable/disable automatic URL detection
+- **Gemini Model**: Select which AI model to use for analysis
 - **API Key**: Update or change your Gemini API key
+- **Backup & Restore**: Export or import your data
 
 ### Back Button Behavior
 
