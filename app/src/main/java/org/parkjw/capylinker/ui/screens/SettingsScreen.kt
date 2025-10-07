@@ -1,5 +1,8 @@
 package org.parkjw.capylinker.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -7,11 +10,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.launch
 import org.parkjw.capylinker.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,12 +32,68 @@ fun SettingsScreen(
     var selectedLanguage by remember { mutableStateOf("en") }
     var selectedTheme by remember { mutableStateOf("system") }
     var showSaveConfirmation by remember { mutableStateOf(false) }
+    var showBackupSuccess by remember { mutableStateOf(false) }
+    var showRestoreSuccess by remember { mutableStateOf(false) }
+    var showRestoreFailed by remember { mutableStateOf(false) }
+    var isBackupInProgress by remember { mutableStateOf(false) }
+    var isRestoreInProgress by remember { mutableStateOf(false) }
     var expandedModel by remember { mutableStateOf(false) }
     var expandedLanguage by remember { mutableStateOf(false) }
     var expandedTheme by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     val strings = remember(language) { 
         org.parkjw.capylinker.ui.strings.getStrings(language)
+    }
+
+    val backupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let {
+            coroutineScope.launch {
+                isBackupInProgress = true
+                try {
+                    context.contentResolver.openOutputStream(it)?.use { outputStream ->
+                        viewModel.createBackup().let { (_, jsonString) ->
+                            outputStream.write(jsonString.toByteArray())
+                            outputStream.flush()
+                        }
+                    }
+                    showBackupSuccess = true
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    isBackupInProgress = false
+                }
+            }
+        }
+    }
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            coroutineScope.launch {
+                isRestoreInProgress = true
+                try {
+                    context.contentResolver.openInputStream(it)?.use { inputStream ->
+                        val success = viewModel.restoreFromBackup(inputStream)
+                        if (success) {
+                            showRestoreSuccess = true
+                        } else {
+                            showRestoreFailed = true
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    showRestoreFailed = true
+                } finally {
+                    isRestoreInProgress = false
+                }
+            }
+        }
     }
 
     LaunchedEffect(apiKey) {
@@ -315,6 +374,109 @@ fun SettingsScreen(
                 LaunchedEffect(Unit) {
                     kotlinx.coroutines.delay(3000)
                     showSaveConfirmation = false
+                }
+            }
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Backup & Restore Settings
+            Text(
+                strings.backupAndRestore,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                strings.backupDescription,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            val (fileName, _) = viewModel.createBackup()
+                            backupLauncher.launch(fileName)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isBackupInProgress && !isRestoreInProgress
+                ) {
+                    Text(if (isBackupInProgress) strings.backupCreating else strings.createBackup)
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        restoreLauncher.launch(arrayOf("application/json"))
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isBackupInProgress && !isRestoreInProgress
+                ) {
+                    Text(if (isRestoreInProgress) strings.restoreInProgress else strings.restoreBackup)
+                }
+            }
+
+            if (showBackupSuccess) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        strings.backupSuccess,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(3000)
+                    showBackupSuccess = false
+                }
+            }
+
+            if (showRestoreSuccess) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        strings.restoreSuccess,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(3000)
+                    showRestoreSuccess = false
+                }
+            }
+
+            if (showRestoreFailed) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        strings.restoreFailed,
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(3000)
+                    showRestoreFailed = false
                 }
             }
 

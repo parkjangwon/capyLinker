@@ -2,6 +2,7 @@ package org.parkjw.capylinker.data.repository
 
 import org.parkjw.capylinker.data.database.LinkDao
 import org.parkjw.capylinker.data.database.LinkEntity
+import org.parkjw.capylinker.ui.screens.Link
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -73,5 +74,17 @@ class LinkRepository @Inject constructor(
 
     suspend fun updateItem(item: LinkEntity) {
         linkDao.insertLink(item)
+    }
+
+    suspend fun getAllLinksOnce(): List<LinkEntity> {
+        return linkDao.getAllLinksOnce()
+    }
+
+    suspend fun deleteAllLinks() {
+        linkDao.deleteAllLinks()
+    }
+
+    suspend fun insertLinks(links: List<LinkEntity>) {
+        linkDao.insertLinks(links)
     }
 }

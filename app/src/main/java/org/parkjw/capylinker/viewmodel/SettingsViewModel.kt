@@ -5,12 +5,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import org.parkjw.capylinker.data.repository.BackupRepository
 import org.parkjw.capylinker.data.repository.SettingsRepository
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val backupRepository: BackupRepository
 ) : ViewModel() {
     val apiKey: Flow<String> = settingsRepository.apiKey
     val geminiModel: Flow<String> = settingsRepository.geminiModel
@@ -46,5 +48,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             settingsRepository.saveClipboardAutoAdd(enabled)
         }
+    }
+
+    suspend fun createBackup(): Pair<String, String> {
+        return backupRepository.createBackup()
+    }
+
+    suspend fun restoreFromBackup(inputStream: java.io.InputStream): Boolean {
+        return backupRepository.restoreFromStream(inputStream)
     }
 }

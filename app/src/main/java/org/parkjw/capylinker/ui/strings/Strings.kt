@@ -49,7 +49,16 @@ data class AppStrings(
     val searchPlaceholder: String,
     val noResults: String,
     val pressBackAgainToExit: String,
-    val notionPageNote: String
+    val notionPageNote: String,
+    val backupAndRestore: String,
+    val backupDescription: String,
+    val createBackup: String,
+    val restoreBackup: String,
+    val backupSuccess: String,
+    val restoreSuccess: String,
+    val restoreFailed: String,
+    val backupCreating: String,
+    val restoreInProgress: String
 )
 
 // 지원 언어 목록
@@ -115,7 +124,16 @@ val EnglishStrings = AppStrings(
     searchPlaceholder = "Search links...",
     noResults = "No results found",
     pressBackAgainToExit = "Press back again to exit",
-    notionPageNote = "Note: Notion pages have dynamic content. Limited information may be available."
+    notionPageNote = "Note: Notion pages have dynamic content. Limited information may be available.",
+    backupAndRestore = "Backup & Restore",
+    backupDescription = "Back up all your data including links, settings, and API key.",
+    createBackup = "Create Backup",
+    restoreBackup = "Restore Backup",
+    backupSuccess = "Backup created successfully!",
+    restoreSuccess = "Data restored successfully!",
+    restoreFailed = "Failed to restore backup. Please check the file.",
+    backupCreating = "Creating backup...",
+    restoreInProgress = "Restoring data..."
 )
 
 val KoreanStrings = AppStrings(
@@ -167,7 +185,16 @@ val KoreanStrings = AppStrings(
     searchPlaceholder = "링크 검색...",
     noResults = "검색 결과가 없습니다",
     pressBackAgainToExit = "뒤로 버튼을 한 번 더 누르면 종료됩니다",
-    notionPageNote = "참고: 노션 페이지는 동적 콘텐츠로 제한된 정보만 제공될 수 있습니다."
+    notionPageNote = "참고: 노션 페이지는 동적 콘텐츠로 제한된 정보만 제공될 수 있습니다.",
+    backupAndRestore = "백업 및 복원",
+    backupDescription = "링크, 설정, API 키를 포함한 모든 데이터를 백업합니다.",
+    createBackup = "백업 생성",
+    restoreBackup = "백업 복원",
+    backupSuccess = "백업이 성공적으로 생성되었습니다!",
+    restoreSuccess = "데이터가 성공적으로 복원되었습니다!",
+    restoreFailed = "백업 복원에 실패했습니다. 파일을 확인해주세요.",
+    backupCreating = "백업 생성 중...",
+    restoreInProgress = "데이터 복원 중..."
 )
 
 val JapaneseStrings = AppStrings(
@@ -219,7 +246,16 @@ val JapaneseStrings = AppStrings(
     searchPlaceholder = "リンクを検索...",
     noResults = "結果が見つかりません",
     pressBackAgainToExit = "もう一度戻るボタンを押すと終了します",
-    notionPageNote = "注意: Notionページは動的コンテンツのため、限られた情報のみ利用可能です。"
+    notionPageNote = "注意: Notionページは動的コンテンツのため、限られた情報のみ利用可能です。",
+    backupAndRestore = "バックアップと復元",
+    backupDescription = "リンク、設定、APIキーを含むすべてのデータをバックアップします。",
+    createBackup = "バックアップを作成",
+    restoreBackup = "バックアップを復元",
+    backupSuccess = "バックアップが正常に作成されました！",
+    restoreSuccess = "データが正常に復元されました！",
+    restoreFailed = "バックアップの復元に失敗しました。ファイルを確認してください。",
+    backupCreating = "バックアップ作成中...",
+    restoreInProgress = "データ復元中..."
 )
 
 val ChineseSimplifiedStrings = AppStrings(
@@ -271,7 +307,16 @@ val ChineseSimplifiedStrings = AppStrings(
     searchPlaceholder = "搜索链接...",
     noResults = "未找到结果",
     pressBackAgainToExit = "再次按返回键退出",
-    notionPageNote = "注意：Notion页面具有动态内容，可能只能提供有限的信息。"
+    notionPageNote = "注意：Notion页面具有动态内容，可能只能提供有限的信息。",
+    backupAndRestore = "备份与恢复",
+    backupDescription = "备份包括链接、设置和API密钥在内的所有数据。",
+    createBackup = "创建备份",
+    restoreBackup = "恢复备份",
+    backupSuccess = "备份创建成功！",
+    restoreSuccess = "数据恢复成功！",
+    restoreFailed = "备份恢复失败。请检查文件。",
+    backupCreating = "正在创建备份...",
+    restoreInProgress = "正在恢复数据..."
 )
 
 val ChineseTraditionalStrings = AppStrings(
@@ -323,7 +368,16 @@ val ChineseTraditionalStrings = AppStrings(
     searchPlaceholder = "搜尋連結...",
     noResults = "找不到結果",
     pressBackAgainToExit = "再次按返回鍵退出",
-    notionPageNote = "注意：Notion頁面具有動態內容，可能只能提供有限的資訊。"
+    notionPageNote = "注意：Notion頁面具有動態內容，可能只能提供有限的資訊。",
+    backupAndRestore = "備份與復原",
+    backupDescription = "備份包括連結、設定和API金鑰在內的所有資料。",
+    createBackup = "建立備份",
+    restoreBackup = "復原備份",
+    backupSuccess = "備份建立成功！",
+    restoreSuccess = "資料復原成功！",
+    restoreFailed = "備份復原失敗。請檢查檔案。",
+    backupCreating = "正在建立備份...",
+    restoreInProgress = "正在復原資料..."
 )
 
 val SpanishStrings = AppStrings(
@@ -375,7 +429,16 @@ val SpanishStrings = AppStrings(
     searchPlaceholder = "Buscar enlaces...",
     noResults = "No se encontraron resultados",
     pressBackAgainToExit = "Presiona atrás nuevamente para salir",
-    notionPageNote = "Nota: Las páginas de Notion tienen contenido dinámico. Puede haber información limitada disponible."
+    notionPageNote = "Nota: Las páginas de Notion tienen contenido dinámico. Puede haber información limitada disponible.",
+    backupAndRestore = "Copia de seguridad y restauración",
+    backupDescription = "Realiza una copia de seguridad de todos tus datos, incluidos enlaces, configuraciones y clave API.",
+    createBackup = "Crear copia de seguridad",
+    restoreBackup = "Restaurar copia de seguridad",
+    backupSuccess = "¡Copia de seguridad creada con éxito!",
+    restoreSuccess = "¡Datos restaurados con éxito!",
+    restoreFailed = "Error al restaurar la copia de seguridad. Por favor, verifica el archivo.",
+    backupCreating = "Creando copia de seguridad...",
+    restoreInProgress = "Restaurando datos..."
 )
 
 val FrenchStrings = AppStrings(
@@ -427,7 +490,16 @@ val FrenchStrings = AppStrings(
     searchPlaceholder = "Rechercher des liens...",
     noResults = "Aucun résultat trouvé",
     pressBackAgainToExit = "Appuyez à nouveau sur retour pour quitter",
-    notionPageNote = "Remarque : Les pages Notion ont du contenu dynamique. Des informations limitées peuvent être disponibles."
+    notionPageNote = "Remarque : Les pages Notion ont du contenu dynamique. Des informations limitées peuvent être disponibles.",
+    backupAndRestore = "Sauvegarde et restauration",
+    backupDescription = "Sauvegardez toutes vos données, y compris les liens, les paramètres et la clé API.",
+    createBackup = "Créer une sauvegarde",
+    restoreBackup = "Restaurer la sauvegarde",
+    backupSuccess = "Sauvegarde créée avec succès !",
+    restoreSuccess = "Données restaurées avec succès !",
+    restoreFailed = "Échec de la restauration de la sauvegarde. Veuillez vérifier le fichier.",
+    backupCreating = "Création de la sauvegarde...",
+    restoreInProgress = "Restauration des données..."
 )
 
 val GermanStrings = AppStrings(
@@ -479,7 +551,16 @@ val GermanStrings = AppStrings(
     searchPlaceholder = "Links suchen...",
     noResults = "Keine Ergebnisse gefunden",
     pressBackAgainToExit = "Drücken Sie erneut zurück, um zu beenden",
-    notionPageNote = "Hinweis: Notion-Seiten haben dynamische Inhalte. Möglicherweise sind nur begrenzte Informationen verfügbar."
+    notionPageNote = "Hinweis: Notion-Seiten haben dynamische Inhalte. Möglicherweise sind nur begrenzte Informationen verfügbar.",
+    backupAndRestore = "Sicherung und Wiederherstellung",
+    backupDescription = "Sichern Sie alle Ihre Daten, einschließlich Links, Einstellungen und API-Schlüssel.",
+    createBackup = "Sicherung erstellen",
+    restoreBackup = "Sicherung wiederherstellen",
+    backupSuccess = "Sicherung erfolgreich erstellt!",
+    restoreSuccess = "Daten erfolgreich wiederhergestellt!",
+    restoreFailed = "Fehler beim Wiederherstellen der Sicherung. Bitte überprüfen Sie die Datei.",
+    backupCreating = "Sicherung wird erstellt...",
+    restoreInProgress = "Daten werden wiederhergestellt..."
 )
 
 val RussianStrings = AppStrings(
@@ -531,7 +612,16 @@ val RussianStrings = AppStrings(
     searchPlaceholder = "Поиск ссылок...",
     noResults = "Результаты не найдены",
     pressBackAgainToExit = "Нажмите назад еще раз, чтобы выйти",
-    notionPageNote = "Примечание: страницы Notion имеют динамический контент. Может быть доступна ограниченная информация."
+    notionPageNote = "Примечание: страницы Notion имеют динамический контент. Может быть доступна ограниченная информация.",
+    backupAndRestore = "Резервное копирование и восстановление",
+    backupDescription = "Создайте резервную копию всех ваших данных, включая ссылки, настройки и ключ API.",
+    createBackup = "Создать резервную копию",
+    restoreBackup = "Восстановить из резервной копии",
+    backupSuccess = "Резервная копия успешно создана!",
+    restoreSuccess = "Данные успешно восстановлены!",
+    restoreFailed = "Не удалось восстановить резервную копию. Пожалуйста, проверьте файл.",
+    backupCreating = "Создание резервной копии...",
+    restoreInProgress = "Восстановление данных..."
 )
 
 val PortugueseStrings = AppStrings(
@@ -583,7 +673,16 @@ val PortugueseStrings = AppStrings(
     searchPlaceholder = "Pesquisar links...",
     noResults = "Nenhum resultado encontrado",
     pressBackAgainToExit = "Pressione voltar novamente para sair",
-    notionPageNote = "Nota: As páginas do Notion têm conteúdo dinâmico. Informações limitadas podem estar disponíveis."
+    notionPageNote = "Nota: As páginas do Notion têm conteúdo dinâmico. Informações limitadas podem estar disponíveis.",
+    backupAndRestore = "Backup e restauração",
+    backupDescription = "Faça backup de todos os seus dados, incluindo links, configurações e chave API.",
+    createBackup = "Criar backup",
+    restoreBackup = "Restaurar backup",
+    backupSuccess = "Backup criado com sucesso!",
+    restoreSuccess = "Dados restaurados com sucesso!",
+    restoreFailed = "Falha ao restaurar backup. Por favor, verifique o arquivo.",
+    backupCreating = "Criando backup...",
+    restoreInProgress = "Restaurando dados..."
 )
 
 fun getStrings(language: String): AppStrings {

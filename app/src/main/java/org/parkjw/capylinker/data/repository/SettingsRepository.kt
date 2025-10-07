@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -79,6 +80,27 @@ class SettingsRepository @Inject constructor(
     suspend fun saveClipboardAutoAdd(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] = enabled
+        }
+    }
+
+    suspend fun getAllSettings(): Map<String, Any> {
+        val preferences = context.dataStore.data.first()
+        return mapOf(
+            "apiKey" to (preferences[PreferencesKeys.GEMINI_API_KEY] ?: ""),
+            "geminiModel" to (preferences[PreferencesKeys.GEMINI_MODEL] ?: "gemini-2.5-flash-lite"),
+            "language" to (preferences[PreferencesKeys.LANGUAGE] ?: "en"),
+            "theme" to (preferences[PreferencesKeys.THEME] ?: "system"),
+            "clipboardAutoAdd" to (preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] ?: true)
+        )
+    }
+
+    suspend fun restoreAllSettings(settings: Map<String, Any>) {
+        context.dataStore.edit { preferences ->
+            (settings["apiKey"] as? String)?.let { preferences[PreferencesKeys.GEMINI_API_KEY] = it }
+            (settings["geminiModel"] as? String)?.let { preferences[PreferencesKeys.GEMINI_MODEL] = it }
+            (settings["language"] as? String)?.let { preferences[PreferencesKeys.LANGUAGE] = it }
+            (settings["theme"] as? String)?.let { preferences[PreferencesKeys.THEME] = it }
+            (settings["clipboardAutoAdd"] as? Boolean)?.let { preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] = it }
         }
     }
 }

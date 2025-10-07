@@ -13,4 +13,13 @@ interface LinkDao {
 
     @Delete
     suspend fun deleteLink(link: LinkEntity)
+
+    @Query("SELECT * FROM links ORDER BY timestamp DESC")
+    suspend fun getAllLinksOnce(): List<LinkEntity>
+
+    @Query("DELETE FROM links")
+    suspend fun deleteAllLinks()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLinks(links: List<LinkEntity>)
 }

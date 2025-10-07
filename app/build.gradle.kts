@@ -7,6 +7,7 @@ plugins {
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     id("com.google.dagger.hilt.android") version "2.48"
     kotlin("kapt") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 // local.properties 읽기
@@ -78,6 +79,7 @@ android {
 }
 
 dependencies {
+implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
