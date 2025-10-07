@@ -12,14 +12,22 @@
 - **Automatic Summarization**: Gemini AI analyzes web content and generates concise summaries
 - **Smart Tagging**: Automatically extracts relevant keywords and tags from content
 - **Title Extraction**: Intelligent title generation based on content analysis
+- **YouTube Video Analysis**: Specialized support for YouTube videos with automatic title, description, and thumbnail extraction
 - **Multi-language Support**: AI responds in your preferred language
 
 ### 📱 Core Functionality
 - **Quick Link Saving**: Add links via in-app dialog or share menu
+- **Clipboard Auto-Detection**: Automatically detects URLs in clipboard when opening the app (can be toggled in settings)
 - **Background Processing**: Links are analyzed asynchronously without blocking the UI
+- **Visual Thumbnails**: Automatically extracts and displays Open Graph images or representative thumbnails for each link
+- **Unified Search**: Search across titles, summaries, URLs, and tags with real-time filtering
 - **Tag Filtering**: Filter saved links by tags for easy organization
 - **Expandable Cards**: Tap to expand/collapse full summaries
-- **Long Press Actions**: Quick access to copy, share, or delete links
+- **Link Options Menu**: Long-press on any link to access quick actions:
+  - **Open**: Launch URL in default browser
+  - **Copy URL**: Copy link to clipboard
+  - **Share**: Share link via system share menu
+  - **Delete**: Remove link from collection
 
 ### 🌍 Multi-language Support
 The app supports 10 languages with full UI translation:
@@ -36,7 +44,8 @@ The app supports 10 languages with full UI translation:
 
 ### 🎨 Customization
 - **Theme Options**: System default, Light mode, or Dark mode
-- **Language Settings**: Choose your preferred language
+- **Language Settings**: Choose your preferred language (10 languages supported)
+- **Clipboard Auto-Add**: Toggle automatic URL detection from clipboard
 - **Persistent Settings**: All preferences are saved locally
 
 ### 🔒 Privacy & Security
@@ -52,8 +61,10 @@ The app supports 10 languages with full UI translation:
 ## 📸 Screenshots
 
 <p align="left">
-  <img src=".github/images/capyLinker1.jpeg" alt="CapyLinker1" width="200"/>
-  <img src=".github/images/capyLinker2.jpeg" alt="CapyLinker2" width="200"/>
+  <img src=".github/images/capyLinker-1.jpeg" alt="CapyLinker-1" width="200"/>
+  <img src=".github/images/capyLinker-2.jpeg" alt="CapyLinker-2" width="200"/>
+  <img src=".github/images/capyLinker-3.jpeg" alt="CapyLinker-3" width="200"/>
+  <img src=".github/images/capyLinker-4.jpeg" alt="CapyLinker-4" width="200"/>
 </p>
 
 ## 🚀 Getting Started
@@ -111,8 +122,18 @@ CapyLinker requires a Google Gemini API key to enable AI-powered features.
 
 **What data is sent to Gemini API?**
 - Only the URL content when you save a link for analysis
+- For YouTube videos: video title, description, and metadata
 - Your language preference (to get responses in your language)
 - Nothing else - no personal data, no usage statistics
+
+### YouTube Video Support
+
+CapyLinker has special handling for YouTube links:
+- Automatically detects YouTube URLs (youtu.be, youtube.com/watch, youtube.com/embed)
+- Extracts video title and description from YouTube metadata
+- Displays high-quality video thumbnail
+- Gemini AI analyzes the video information to generate summary and tags
+- Works seamlessly like any other link
 
 ## 📖 Usage Guide
 
@@ -129,20 +150,57 @@ CapyLinker requires a Google Gemini API key to enable AI-powered features.
 2. Select **"CapyLinker"** from the share menu
 3. The link is automatically saved and analyzed
 
-### Organizing Links
+#### Method 3: Clipboard Auto-Detection
+1. Copy any URL to your clipboard
+2. Open CapyLinker
+3. A dialog will appear asking if you want to add the URL
+4. Tap **"Add"** to save the link
+   - Can be disabled in Settings if not needed
+
+### Finding & Organizing Links
+
+#### Unified Search
+1. Tap the **🔍 Search** icon in the top bar
+2. Type your search query
+3. Results filter in real-time across:
+   - Link titles
+   - Summaries
+   - URLs
+   - Tags
+4. Press **back** or tap **✕** to exit search mode
 
 #### Filtering by Tags
 - Tap any tag chip at the top of the screen
 - Only links with that tag will be displayed
 - Tap "All" to show all links
+- Search and tag filters work together for precise results
 
 #### Viewing Details
 - Tap a link card to expand/collapse the full summary
-- Long press for quick actions (copy, share, delete)
+- **Thumbnails** are displayed automatically for visual recognition
+- Long press to open the **Link Options Menu**
+
+### Link Options Menu
+
+Long-press any link to access quick actions:
+- **Open**: Opens the URL in your default browser
+- **Copy URL**: Copies the link to clipboard
+- **Share**: Share via system share menu
+- **Delete**: Removes the link from your collection
 
 ### Managing Settings
 
 Navigate to Settings (⚙️) to customize:
-- **Language**: Choose your preferred language
+- **Language**: Choose your preferred language (10 languages available)
 - **Theme**: Light, Dark, or System default
+- **Clipboard Auto-Add**: Enable/disable automatic URL detection
 - **API Key**: Update or change your Gemini API key
+
+### Back Button Behavior
+
+For a better user experience:
+- **In Search Mode**: Back button exits search
+- **In Link List**: Press back twice within 2 seconds to exit the app
+  - First press shows a toast message
+  - Second press closes the app
+- **With Dialogs Open**: Back button closes the dialog
