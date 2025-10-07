@@ -21,6 +21,7 @@ class SettingsRepository @Inject constructor(
 ) {
     private object PreferencesKeys {
         val GEMINI_API_KEY = stringPreferencesKey("gemini_api_key")
+        val GEMINI_MODEL = stringPreferencesKey("gemini_model")
         val LANGUAGE = stringPreferencesKey("language")
         val THEME = stringPreferencesKey("theme")
         val CLIPBOARD_AUTO_ADD = booleanPreferencesKey("clipboard_auto_add")
@@ -29,6 +30,11 @@ class SettingsRepository @Inject constructor(
     val apiKey: Flow<String> = context.dataStore.data
         .map { preferences ->
             preferences[PreferencesKeys.GEMINI_API_KEY] ?: ""
+        }
+
+    val geminiModel: Flow<String> = context.dataStore.data
+        .map { preferences ->
+            preferences[PreferencesKeys.GEMINI_MODEL] ?: "gemini-2.5-flash-lite"
         }
 
     val language: Flow<String> = context.dataStore.data
@@ -49,6 +55,12 @@ class SettingsRepository @Inject constructor(
     suspend fun saveApiKey(apiKey: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.GEMINI_API_KEY] = apiKey
+        }
+    }
+
+    suspend fun saveGeminiModel(model: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.GEMINI_MODEL] = model
         }
     }
 

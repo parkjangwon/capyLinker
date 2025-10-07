@@ -28,9 +28,10 @@ class GeminiRepository @Inject constructor(
 
     private suspend fun initializeModel() {
         val apiKey = settingsRepository.apiKey.first()
+        val modelName = settingsRepository.geminiModel.first()
         if (apiKey.isNotBlank()) {
             generativeModel = GenerativeModel(
-                modelName = "gemini-2.5-flash-lite",
+                modelName = modelName,
                 apiKey = apiKey
             )
         }

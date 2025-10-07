@@ -1,6 +1,8 @@
 package org.parkjw.capylinker.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -19,12 +21,15 @@ fun SettingsScreen(
     viewModel: SettingsViewModel
 ) {
     val apiKey by viewModel.apiKey.collectAsState(initial = "")
+    val geminiModel by viewModel.geminiModel.collectAsState(initial = "gemini-2.5-flash-lite")
     val language by viewModel.language.collectAsState(initial = "en")
     val theme by viewModel.theme.collectAsState(initial = "system")
     var tempApiKey by remember { mutableStateOf("") }
+    var selectedModel by remember { mutableStateOf("gemini-2.5-flash-lite") }
     var selectedLanguage by remember { mutableStateOf("en") }
     var selectedTheme by remember { mutableStateOf("system") }
     var showSaveConfirmation by remember { mutableStateOf(false) }
+    var expandedModel by remember { mutableStateOf(false) }
     var expandedLanguage by remember { mutableStateOf(false) }
     var expandedTheme by remember { mutableStateOf(false) }
 
@@ -34,6 +39,10 @@ fun SettingsScreen(
 
     LaunchedEffect(apiKey) {
         tempApiKey = apiKey
+    }
+
+    LaunchedEffect(geminiModel) {
+        selectedModel = geminiModel
     }
 
     LaunchedEffect(language) {
@@ -60,6 +69,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -100,27 +110,6 @@ fun SettingsScreen(
                         )
                     }
                 }
-            }
-
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-            // Clipboard Auto-add Settings
-            Text(
-                strings.clipboardAutoAddLabel,
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            val clipboardAutoAdd by viewModel.clipboardAutoAdd.collectAsState(initial = true)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = strings.clipboardAutoAddLabel)
-                Switch(
-                    checked = clipboardAutoAdd,
-                    onCheckedChange = { viewModel.setClipboardAutoAdd(it) }
-                )
             }
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
@@ -183,6 +172,27 @@ fun SettingsScreen(
 
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // Clipboard Auto-add Settings
+            Text(
+                strings.clipboardAutoAddLabel,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            val clipboardAutoAdd by viewModel.clipboardAutoAdd.collectAsState(initial = true)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = strings.clipboardAutoAddLabel)
+                Switch(
+                    checked = clipboardAutoAdd,
+                    onCheckedChange = { viewModel.setClipboardAutoAdd(it) }
+                )
+            }
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
             // API Key Configuration
             Text(
                 strings.apiKeyConfiguration,
@@ -206,6 +216,52 @@ fun SettingsScreen(
 
             Text(
                 strings.apiKeyHint,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            val availableModels = listOf(
+                "gemini-2.5-flash-lite" to "Gemini 2.5 Flash Lite",
+                "gemini-2.5-flash" to "Gemini 2.5 Flash",
+                "gemini-2.5-pro" to "Gemini 2.5 Pro"
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = expandedModel,
+                onExpandedChange = { expandedModel = !expandedModel }
+            ) {
+                OutlinedTextField(
+                    value = availableModels.find { it.first == selectedModel }?.second 
+                        ?: "Gemini 2.5 Flash Lite",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(strings.modelLabel) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedModel) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expandedModel,
+                    onDismissRequest = { expandedModel = false }
+                ) {
+                    availableModels.forEach { (modelId, modelName) ->
+                        DropdownMenuItem(
+                            text = { Text(modelName) },
+                            onClick = {
+                                selectedModel = modelId
+                                viewModel.saveGeminiModel(modelId)
+                                expandedModel = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Text(
+                strings.modelDescription,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -261,6 +317,8 @@ fun SettingsScreen(
                     showSaveConfirmation = false
                 }
             }
+
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
         }
     }
 }

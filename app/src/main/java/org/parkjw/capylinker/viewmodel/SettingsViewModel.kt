@@ -13,6 +13,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
     val apiKey: Flow<String> = settingsRepository.apiKey
+    val geminiModel: Flow<String> = settingsRepository.geminiModel
     val language: Flow<String> = settingsRepository.language
     val theme: Flow<String> = settingsRepository.theme
     val clipboardAutoAdd: Flow<Boolean> = settingsRepository.clipboardAutoAdd
@@ -20,6 +21,12 @@ class SettingsViewModel @Inject constructor(
     fun saveApiKey(key: String) {
         viewModelScope.launch {
             settingsRepository.saveApiKey(key)
+        }
+    }
+
+    fun saveGeminiModel(model: String) {
+        viewModelScope.launch {
+            settingsRepository.saveGeminiModel(model)
         }
     }
 
