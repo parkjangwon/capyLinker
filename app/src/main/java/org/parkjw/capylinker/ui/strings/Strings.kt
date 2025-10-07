@@ -41,7 +41,11 @@ data class AppStrings(
     val open: String,
     val copyUrl: String,
     val share: String,
-    val delete: String
+    val delete: String,
+    val search: String,
+    val searchPlaceholder: String,
+    val noResults: String,
+    val pressBackAgainToExit: String
 )
 
 // 지원 언어 목록
@@ -99,7 +103,11 @@ val EnglishStrings = AppStrings(
     open = "Open",
     copyUrl = "Copy URL",
     share = "Share",
-    delete = "Delete"
+    delete = "Delete",
+    search = "Search",
+    searchPlaceholder = "Search links...",
+    noResults = "No results found",
+    pressBackAgainToExit = "Press back again to exit"
 )
 
 val KoreanStrings = AppStrings(
@@ -143,7 +151,11 @@ val KoreanStrings = AppStrings(
     open = "열기",
     copyUrl = "URL 복사",
     share = "공유",
-    delete = "삭제"
+    delete = "삭제",
+    search = "검색",
+    searchPlaceholder = "링크 검색...",
+    noResults = "검색 결과가 없습니다",
+    pressBackAgainToExit = "뒤로 버튼을 한 번 더 누르면 종료됩니다"
 )
 
 val JapaneseStrings = AppStrings(
@@ -187,7 +199,11 @@ val JapaneseStrings = AppStrings(
     open = "開く",
     copyUrl = "URLをコピー",
     share = "共有",
-    delete = "削除"
+    delete = "削除",
+    search = "検索",
+    searchPlaceholder = "リンクを検索...",
+    noResults = "結果が見つかりません",
+    pressBackAgainToExit = "もう一度戻るボタンを押すと終了します"
 )
 
 val ChineseSimplifiedStrings = AppStrings(
@@ -231,7 +247,11 @@ val ChineseSimplifiedStrings = AppStrings(
     open = "打开",
     copyUrl = "复制URL",
     share = "分享",
-    delete = "删除"
+    delete = "删除",
+    search = "搜索",
+    searchPlaceholder = "搜索链接...",
+    noResults = "未找到结果",
+    pressBackAgainToExit = "再次按返回键退出"
 )
 
 val ChineseTraditionalStrings = AppStrings(
@@ -275,7 +295,11 @@ val ChineseTraditionalStrings = AppStrings(
     open = "開啟",
     copyUrl = "複製URL",
     share = "分享",
-    delete = "刪除"
+    delete = "刪除",
+    search = "搜尋",
+    searchPlaceholder = "搜尋連結...",
+    noResults = "找不到結果",
+    pressBackAgainToExit = "再次按返回鍵退出"
 )
 
 val SpanishStrings = AppStrings(
@@ -319,7 +343,11 @@ val SpanishStrings = AppStrings(
     open = "Abrir",
     copyUrl = "Copiar URL",
     share = "Compartir",
-    delete = "Eliminar"
+    delete = "Eliminar",
+    search = "Buscar",
+    searchPlaceholder = "Buscar enlaces...",
+    noResults = "No se encontraron resultados",
+    pressBackAgainToExit = "Presiona atrás nuevamente para salir"
 )
 
 val FrenchStrings = AppStrings(
@@ -363,7 +391,11 @@ val FrenchStrings = AppStrings(
     open = "Ouvrir",
     copyUrl = "Copier l'URL",
     share = "Partager",
-    delete = "Supprimer"
+    delete = "Supprimer",
+    search = "Rechercher",
+    searchPlaceholder = "Rechercher des liens...",
+    noResults = "Aucun résultat trouvé",
+    pressBackAgainToExit = "Appuyez à nouveau sur retour pour quitter"
 )
 
 val GermanStrings = AppStrings(
@@ -407,7 +439,11 @@ val GermanStrings = AppStrings(
     open = "Öffnen",
     copyUrl = "URL kopieren",
     share = "Teilen",
-    delete = "Löschen"
+    delete = "Löschen",
+    search = "Suchen",
+    searchPlaceholder = "Links suchen...",
+    noResults = "Keine Ergebnisse gefunden",
+    pressBackAgainToExit = "Drücken Sie erneut zurück, um zu beenden"
 )
 
 val RussianStrings = AppStrings(
@@ -451,7 +487,11 @@ val RussianStrings = AppStrings(
     open = "Открыть",
     copyUrl = "Копировать URL",
     share = "Поделиться",
-    delete = "Удалить"
+    delete = "Удалить",
+    search = "Поиск",
+    searchPlaceholder = "Поиск ссылок...",
+    noResults = "Результаты не найдены",
+    pressBackAgainToExit = "Нажмите назад еще раз, чтобы выйти"
 )
 
 val PortugueseStrings = AppStrings(
@@ -495,7 +535,11 @@ val PortugueseStrings = AppStrings(
     open = "Abrir",
     copyUrl = "Copiar URL",
     share = "Compartilhar",
-    delete = "Excluir"
+    delete = "Excluir",
+    search = "Pesquisar",
+    searchPlaceholder = "Pesquisar links...",
+    noResults = "Nenhum resultado encontrado",
+    pressBackAgainToExit = "Pressione voltar novamente para sair"
 )
 
 fun getStrings(language: String): AppStrings {

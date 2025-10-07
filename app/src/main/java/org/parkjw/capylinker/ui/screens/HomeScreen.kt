@@ -3,6 +3,8 @@ package org.parkjw.capylinker.ui.screens
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +13,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -51,12 +55,43 @@ fun HomeScreen(
     val showAddDialog by viewModel.showAddDialog.collectAsState()
     val showClipboardDialog by viewModel.showClipboardDialog.collectAsState()
     val clipboardUrl by viewModel.clipboardUrl.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val isSearchActive by viewModel.isSearchActive.collectAsState()
     val expandedLinkUrl = remember { mutableStateOf<String?>(null) }
     val showContextMenu = remember { mutableStateOf<Link?>(null) }
 
     val language by viewModel.language.collectAsState(initial = "en")
     val strings = remember(language) {
         org.parkjw.capylinker.ui.strings.getStrings(language)
+    }
+
+    // 뒤로가기 처리
+    val backPressedTime = remember { mutableStateOf(0L) }
+
+    BackHandler(enabled = true) {
+        when {
+            isSearchActive -> {
+                // 검색 모드에서는 검색 종료
+                viewModel.toggleSearchActive()
+            }
+            showAddDialog || showClipboardDialog || showContextMenu.value != null -> {
+                // 다이얼로그가 열려있으면 닫기
+                viewModel.hideAddLinkDialog()
+                viewModel.dismissClipboardDialog()
+                showContextMenu.value = null
+            }
+            else -> {
+                // 목록 화면에서 두 번 눌러야 종료
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - backPressedTime.value < 2000) {
+                    // 2초 이내에 다시 누르면 종료
+                    (context as? android.app.Activity)?.finish()
+                } else {
+                    backPressedTime.value = currentTime
+                    Toast.makeText(context, strings.pressBackAgainToExit, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     // 클립보드 확인
@@ -72,10 +107,40 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("CapyLinker") },
+                title = { 
+                    if (isSearchActive) {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.setSearchQuery(it) },
+                            placeholder = { Text(strings.searchPlaceholder) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                            )
+                        )
+                    } else {
+                        Text("CapyLinker")
+                    }
+                },
+                navigationIcon = {
+                    if (isSearchActive) {
+                        IconButton(onClick = { viewModel.toggleSearchActive() }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close")
+                        }
+                    }
+                },
                 actions = {
+                    if (!isSearchActive) {
+                        IconButton(onClick = { viewModel.toggleSearchActive() }) {
+                            Icon(Icons.Default.Search, contentDescription = strings.search)
+                        }
+                    }
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
             )
@@ -124,22 +189,46 @@ fun HomeScreen(
             }
 
             // Links List
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(links, key = { it.url }) { link ->
-                    LinkItem(
-                        link = link,
-                        isExpanded = expandedLinkUrl.value == link.url,
-                        onClick = {
-                            expandedLinkUrl.value = if (expandedLinkUrl.value == link.url) null else link.url
-                        },
-                        onLongClick = { showContextMenu.value = link },
-                        modifier = Modifier.animateItemPlacement()
-                    )
+            if (links.isEmpty() && searchQuery.isNotBlank()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = strings.noResults,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(links, key = { it.url }) { link ->
+                        LinkItem(
+                            link = link,
+                            isExpanded = expandedLinkUrl.value == link.url,
+                            onClick = {
+                                expandedLinkUrl.value = if (expandedLinkUrl.value == link.url) null else link.url
+                            },
+                            onLongClick = { showContextMenu.value = link },
+                            modifier = Modifier.animateItemPlacement()
+                        )
+                    }
                 }
             }
         }

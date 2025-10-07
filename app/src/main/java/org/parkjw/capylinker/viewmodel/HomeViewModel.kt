@@ -34,6 +34,12 @@ class HomeViewModel @Inject constructor(
     private val _selectedTag = MutableStateFlow<String?>(null)
     val selectedTag: StateFlow<String?> = _selectedTag.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
+
     private val allLinks: StateFlow<List<Link>> = linkRepository.getAllLinks()
         .map { entities ->
             entities.map { entity ->
@@ -53,12 +59,25 @@ class HomeViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val links: StateFlow<List<Link>> = combine(allLinks, _selectedTag) { links, tag ->
-        if (tag == null) {
-            links
-        } else {
-            links.filter { it.tags.contains(tag) }
+    val links: StateFlow<List<Link>> = combine(allLinks, _selectedTag, _searchQuery) { links, tag, query ->
+        var filtered = links
+
+        // 태그 필터링
+        if (tag != null) {
+            filtered = filtered.filter { it.tags.contains(tag) }
         }
+
+        // 검색어 필터링
+        if (query.isNotBlank()) {
+            filtered = filtered.filter { link ->
+                link.title.contains(query, ignoreCase = true) ||
+                link.summary.contains(query, ignoreCase = true) ||
+                link.url.contains(query, ignoreCase = true) ||
+                link.tags.any { it.contains(query, ignoreCase = true) }
+            }
+        }
+
+        filtered
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -132,5 +151,20 @@ class HomeViewModel @Inject constructor(
     private fun isValidUrl(text: String): Boolean {
         return text.startsWith("http://", ignoreCase = true) || 
                text.startsWith("https://", ignoreCase = true)
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleSearchActive() {
+        _isSearchActive.value = !_isSearchActive.value
+        if (!_isSearchActive.value) {
+            _searchQuery.value = ""
+        }
+    }
+
+    fun clearSearch() {
+        _searchQuery.value = ""
     }
 }
