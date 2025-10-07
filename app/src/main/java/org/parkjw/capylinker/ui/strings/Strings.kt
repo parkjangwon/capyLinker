@@ -45,7 +45,8 @@ data class AppStrings(
     val search: String,
     val searchPlaceholder: String,
     val noResults: String,
-    val pressBackAgainToExit: String
+    val pressBackAgainToExit: String,
+    val notionPageNote: String
 )
 
 // 지원 언어 목록
@@ -107,7 +108,8 @@ val EnglishStrings = AppStrings(
     search = "Search",
     searchPlaceholder = "Search links...",
     noResults = "No results found",
-    pressBackAgainToExit = "Press back again to exit"
+    pressBackAgainToExit = "Press back again to exit",
+    notionPageNote = "Note: Notion pages have dynamic content. Limited information may be available."
 )
 
 val KoreanStrings = AppStrings(
@@ -155,7 +157,8 @@ val KoreanStrings = AppStrings(
     search = "검색",
     searchPlaceholder = "링크 검색...",
     noResults = "검색 결과가 없습니다",
-    pressBackAgainToExit = "뒤로 버튼을 한 번 더 누르면 종료됩니다"
+    pressBackAgainToExit = "뒤로 버튼을 한 번 더 누르면 종료됩니다",
+    notionPageNote = "참고: 노션 페이지는 동적 콘텐츠로 제한된 정보만 제공될 수 있습니다."
 )
 
 val JapaneseStrings = AppStrings(
@@ -203,7 +206,8 @@ val JapaneseStrings = AppStrings(
     search = "検索",
     searchPlaceholder = "リンクを検索...",
     noResults = "結果が見つかりません",
-    pressBackAgainToExit = "もう一度戻るボタンを押すと終了します"
+    pressBackAgainToExit = "もう一度戻るボタンを押すと終了します",
+    notionPageNote = "注意: Notionページは動的コンテンツのため、限られた情報のみ利用可能です。"
 )
 
 val ChineseSimplifiedStrings = AppStrings(
@@ -251,7 +255,8 @@ val ChineseSimplifiedStrings = AppStrings(
     search = "搜索",
     searchPlaceholder = "搜索链接...",
     noResults = "未找到结果",
-    pressBackAgainToExit = "再次按返回键退出"
+    pressBackAgainToExit = "再次按返回键退出",
+    notionPageNote = "注意：Notion页面具有动态内容，可能只能提供有限的信息。"
 )
 
 val ChineseTraditionalStrings = AppStrings(
@@ -299,7 +304,8 @@ val ChineseTraditionalStrings = AppStrings(
     search = "搜尋",
     searchPlaceholder = "搜尋連結...",
     noResults = "找不到結果",
-    pressBackAgainToExit = "再次按返回鍵退出"
+    pressBackAgainToExit = "再次按返回鍵退出",
+    notionPageNote = "注意：Notion頁面具有動態內容，可能只能提供有限的資訊。"
 )
 
 val SpanishStrings = AppStrings(
@@ -347,7 +353,8 @@ val SpanishStrings = AppStrings(
     search = "Buscar",
     searchPlaceholder = "Buscar enlaces...",
     noResults = "No se encontraron resultados",
-    pressBackAgainToExit = "Presiona atrás nuevamente para salir"
+    pressBackAgainToExit = "Presiona atrás nuevamente para salir",
+    notionPageNote = "Nota: Las páginas de Notion tienen contenido dinámico. Puede haber información limitada disponible."
 )
 
 val FrenchStrings = AppStrings(
@@ -395,7 +402,8 @@ val FrenchStrings = AppStrings(
     search = "Rechercher",
     searchPlaceholder = "Rechercher des liens...",
     noResults = "Aucun résultat trouvé",
-    pressBackAgainToExit = "Appuyez à nouveau sur retour pour quitter"
+    pressBackAgainToExit = "Appuyez à nouveau sur retour pour quitter",
+    notionPageNote = "Remarque : Les pages Notion ont du contenu dynamique. Des informations limitées peuvent être disponibles."
 )
 
 val GermanStrings = AppStrings(
@@ -443,7 +451,8 @@ val GermanStrings = AppStrings(
     search = "Suchen",
     searchPlaceholder = "Links suchen...",
     noResults = "Keine Ergebnisse gefunden",
-    pressBackAgainToExit = "Drücken Sie erneut zurück, um zu beenden"
+    pressBackAgainToExit = "Drücken Sie erneut zurück, um zu beenden",
+    notionPageNote = "Hinweis: Notion-Seiten haben dynamische Inhalte. Möglicherweise sind nur begrenzte Informationen verfügbar."
 )
 
 val RussianStrings = AppStrings(
@@ -491,7 +500,8 @@ val RussianStrings = AppStrings(
     search = "Поиск",
     searchPlaceholder = "Поиск ссылок...",
     noResults = "Результаты не найдены",
-    pressBackAgainToExit = "Нажмите назад еще раз, чтобы выйти"
+    pressBackAgainToExit = "Нажмите назад еще раз, чтобы выйти",
+    notionPageNote = "Примечание: страницы Notion имеют динамический контент. Может быть доступна ограниченная информация."
 )
 
 val PortugueseStrings = AppStrings(
@@ -539,7 +549,8 @@ val PortugueseStrings = AppStrings(
     search = "Pesquisar",
     searchPlaceholder = "Pesquisar links...",
     noResults = "Nenhum resultado encontrado",
-    pressBackAgainToExit = "Pressione voltar novamente para sair"
+    pressBackAgainToExit = "Pressione voltar novamente para sair",
+    notionPageNote = "Nota: As páginas do Notion têm conteúdo dinâmico. Informações limitadas podem estar disponíveis."
 )
 
 fun getStrings(language: String): AppStrings {

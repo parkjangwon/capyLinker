@@ -5,6 +5,7 @@ import com.google.ai.client.generativeai.type.GenerateContentResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -49,6 +50,11 @@ class GeminiRepository @Inject constructor(
                 val youtubeVideoId = extractYouTubeVideoId(url)
                 if (youtubeVideoId != null) {
                     return@withContext analyzeYouTubeVideo(youtubeVideoId, url, maxRetries)
+                }
+
+                // Notion 링크 확인
+                if (isNotionUrl(url)) {
+                    return@withContext analyzeNotionPage(url, maxRetries)
                 }
 
                 val content = fetchUrlContent(url)
@@ -236,19 +242,42 @@ class GeminiRepository @Inject constructor(
         val url = URL(urlString)
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
-        connection.connectTimeout = 5000
-        connection.readTimeout = 5000
+        connection.connectTimeout = 15000
+        connection.readTimeout = 15000
+
+        // 더 나은 콘텐츠 접근을 위한 헤더 설정
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+        connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9,ko;q=0.8")
+        connection.setRequestProperty("Accept-Encoding", "gzip, deflate")
+        connection.setRequestProperty("Connection", "keep-alive")
+        connection.setRequestProperty("Upgrade-Insecure-Requests", "1")
+        connection.instanceFollowRedirects = true
+
         connection.connect()
 
-        val inputStream = connection.inputStream
-        val reader = BufferedReader(InputStreamReader(inputStream))
+        // gzip 압축 응답 처리
+        val encoding = connection.contentEncoding
+        val rawInputStream = connection.inputStream
+        val inputStream = if (encoding?.equals("gzip", ignoreCase = true) == true) {
+            java.util.zip.GZIPInputStream(rawInputStream)
+        } else {
+            rawInputStream
+        }
+
+        val reader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
         val content = StringBuilder()
         var line: String?
         while (reader.readLine().also { line = it } != null) {
-            content.append(line)
+            content.append(line).append("\n")
         }
         reader.close()
         return content.toString()
+    }
+
+    private fun isNotionUrl(url: String): Boolean {
+        return url.contains("notion.so", ignoreCase = true) || 
+               url.contains("notion.site", ignoreCase = true)
     }
 
     private fun extractYouTubeVideoId(url: String): String? {
@@ -378,4 +407,71 @@ class GeminiRepository @Inject constructor(
             ""
         }
     }
+
+    private suspend fun analyzeNotionPage(url: String, maxRetries: Int): AnalysisResult {
+        return try {
+            // 노션 URL 정리 (쿼리 파라미터 제거)
+            val cleanUrl = url.split("?").first()
+
+            android.util.Log.d("NotionAnalysis", "Notion page detected: $cleanUrl")
+
+            // Notion 페이지의 HTML 가져오기
+            val htmlContent = fetchUrlContent(cleanUrl)
+            val doc = Jsoup.parse(htmlContent, cleanUrl)
+
+            // 제목 추출 시도
+            var title = doc.selectFirst("meta[property=og:title]")?.attr("content")
+                ?: doc.selectFirst("meta[name=twitter:title]")?.attr("content")
+                ?: doc.selectFirst("title")?.text()
+                ?: ""
+
+            // 제목이 비어있으면 URL에서 추출
+            if (title.isBlank()) {
+                title = cleanUrl.substringAfterLast("/")
+                    .substringBefore("-")
+                    .replace("-", " ")
+                    .split(" ")
+                    .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+            }
+
+            if (title.isBlank()) {
+                title = "Notion Page"
+            }
+
+            // 썸네일 추출
+            val thumbnailUrl = doc.selectFirst("meta[property=og:image]")?.attr("content")
+                ?: doc.selectFirst("meta[name=twitter:image]")?.attr("content")
+
+            val language = settingsRepository.language.first()
+
+            // Gemini 호출 없이 간단한 메시지만 반환
+            android.util.Log.d("NotionAnalysis", "Returning simple message for Notion page")
+            AnalysisResult(
+                title = title,
+                summary = when (language) {
+                    "ko" -> "노션 페이지는 동적 콘텐츠로 제한된 정보만 제공될 수 있습니다."
+                    "ja" -> "Notionページは動的コンテンツのため、限られた情報のみ利用可能です。"
+                    "zh-CN" -> "Notion页面具有动态内容，可能只能提供有限的信息。"
+                    "zh-TW" -> "Notion頁面具有動態內容，可能只能提供有限的資訊。"
+                    "es" -> "Las páginas de Notion tienen contenido dinámico. Puede haber información limitada disponible."
+                    "fr" -> "Les pages Notion ont du contenu dynamique. Des informations limitées peuvent être disponibles."
+                    "de" -> "Notion-Seiten haben dynamische Inhalte. Möglicherweise sind nur begrenzte Informationen verfügbar."
+                    "ru" -> "Страницы Notion имеют динамический контент. Может быть доступна ограниченная информация."
+                    "pt" -> "As páginas do Notion têm conteúdo dinâmico. Informações limitadas podem estar disponíveis."
+                    else -> "Notion pages have dynamic content. Limited information may be available."
+                },
+                tags = emptyList(),
+                thumbnailUrl = thumbnailUrl
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("NotionAnalysis", "Error processing Notion page", e)
+            AnalysisResult(
+                title = "Notion Page",
+                summary = "Failed to load Notion page information.",
+                tags = emptyList(),
+                thumbnailUrl = null
+            )
+        }
+    }
+
 }
