@@ -45,6 +45,12 @@ class GeminiRepository @Inject constructor(
 
         return withContext(Dispatchers.IO) {
             try {
+                // YouTube 링크 확인
+                val youtubeVideoId = extractYouTubeVideoId(url)
+                if (youtubeVideoId != null) {
+                    return@withContext analyzeYouTubeVideo(youtubeVideoId, url, maxRetries)
+                }
+
                 val content = fetchUrlContent(url)
                 if (content.isBlank()) {
                     return@withContext AnalysisResult("No title", "Could not fetch content from URL", emptyList(), null)
@@ -243,5 +249,133 @@ class GeminiRepository @Inject constructor(
         }
         reader.close()
         return content.toString()
+    }
+
+    private fun extractYouTubeVideoId(url: String): String? {
+        return try {
+            // youtu.be/VIDEO_ID 형식
+            val shortFormRegex = """youtu\.be/([a-zA-Z0-9_-]{11})""".toRegex()
+            shortFormRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+
+            // youtube.com/watch?v=VIDEO_ID 형식
+            val longFormRegex = """youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})""".toRegex()
+            longFormRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+
+            // youtube.com/embed/VIDEO_ID 형식
+            val embedRegex = """youtube\.com/embed/([a-zA-Z0-9_-]{11})""".toRegex()
+            embedRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun getYouTubeThumbnailUrl(videoId: String): String {
+        // 고화질 썸네일 우선 시도
+        return "https://i.ytimg.com/vi/$videoId/maxresdefault.jpg"
+    }
+
+    private suspend fun analyzeYouTubeVideo(videoId: String, originalUrl: String, maxRetries: Int): AnalysisResult {
+        return try {
+            val thumbnailUrl = getYouTubeThumbnailUrl(videoId)
+
+            // YouTube 페이지에서 메타데이터 가져오기
+            val htmlContent = fetchUrlContent("https://www.youtube.com/watch?v=$videoId")
+            val videoTitle = extractYouTubeTitle(htmlContent)
+            val videoDescription = extractYouTubeDescription(htmlContent)
+
+            val language = settingsRepository.language.first()
+            val languageInstruction = when (language) {
+                "ko" -> "한국어로 답변해주세요."
+                "en" -> "Please respond in English."
+                "ja" -> "日本語で回答してください。"
+                "zh-CN" -> "请用简体中文回答。"
+                "zh-TW" -> "請用繁體中文回答。"
+                "es" -> "Por favor, responde en español."
+                "fr" -> "Veuillez répondre en français."
+                "de" -> "Bitte antworten Sie auf Deutsch."
+                "ru" -> "Пожалуйста, отвечайте на русском языке."
+                "pt" -> "Por favor, responda em português."
+                else -> "Please respond in English."
+            }
+
+            val prompt = """
+                $languageInstruction
+
+                Analyze the following YouTube video information and provide:
+                1. A short title (one sentence)
+                2. A detailed summary (max 200 words)
+                3. 3 relevant keywords or tags
+
+                Format the output exactly as:
+                TITLE: [Your title in the specified language]
+                SUMMARY: [Your summary in the specified language]
+                TAGS: [tag1,tag2,tag3]
+
+                Video Title: $videoTitle
+                Video Description: ${videoDescription.take(1000)}
+                Video URL: $originalUrl
+            """.trimIndent()
+
+            var lastException: Exception? = null
+            repeat(maxRetries) { attempt ->
+                try {
+                    val response = generativeModel!!.generateContent(prompt)
+                    return parseResponse(response, thumbnailUrl)
+                } catch (e: Exception) {
+                    lastException = e
+                    val errorMessage = e.message ?: ""
+
+                    if (errorMessage.contains("quota", ignoreCase = true) || 
+                        errorMessage.contains("rate limit", ignoreCase = true)) {
+                        val retryDelay = extractRetryDelay(errorMessage)
+                        if (attempt < maxRetries - 1) {
+                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
+                        } else {
+                            return AnalysisResult(
+                                "Quota Exceeded",
+                                "API quota exceeded. Please try again later.",
+                                emptyList(),
+                                thumbnailUrl
+                            )
+                        }
+                    } else {
+                        throw e
+                    }
+                }
+            }
+
+            AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), thumbnailUrl)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            AnalysisResult("Error", "Failed to analyze YouTube video: ${e.message}", emptyList(), null)
+        }
+    }
+
+    private fun extractYouTubeTitle(htmlContent: String): String {
+        return try {
+            val titleRegex = """<meta\s+name=["']title["']\s+content=["']([^"']+)["']""".toRegex()
+            val title = titleRegex.find(htmlContent)?.groupValues?.getOrNull(1)
+            if (title != null) return title
+
+            val ogTitleRegex = """<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']""".toRegex()
+            ogTitleRegex.find(htmlContent)?.groupValues?.getOrNull(1) ?: "YouTube Video"
+        } catch (e: Exception) {
+            "YouTube Video"
+        }
+    }
+
+    private fun extractYouTubeDescription(htmlContent: String): String {
+        return try {
+            val descRegex = """<meta\s+name=["']description["']\s+content=["']([^"']+)["']""".toRegex()
+            val desc = descRegex.find(htmlContent)?.groupValues?.getOrNull(1)
+            if (desc != null) return desc
+
+            val ogDescRegex = """<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']""".toRegex()
+            ogDescRegex.find(htmlContent)?.groupValues?.getOrNull(1) ?: ""
+        } catch (e: Exception) {
+            ""
+        }
     }
 }
