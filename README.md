@@ -31,7 +31,7 @@
 
 ### 🌍 Multi-language Support
 The app supports 10 languages with full UI translation:
-- English (default)
+- English
 - Korean (한국어)
 - Japanese (日本語)
 - Simplified Chinese (简体中文)
