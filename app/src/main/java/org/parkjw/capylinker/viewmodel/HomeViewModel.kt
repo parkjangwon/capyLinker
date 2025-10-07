@@ -10,6 +10,8 @@ import org.parkjw.capylinker.data.database.LinkEntity
 import org.parkjw.capylinker.data.repository.LinkRepository
 import org.parkjw.capylinker.ui.screens.Link
 import javax.inject.Inject
+import kotlin.collections.filter
+import kotlin.collections.flatMap
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -32,7 +34,8 @@ class HomeViewModel @Inject constructor(
                     title = entity.title,
                     summary = entity.summary,
                     tags = entity.tags,
-                    isAnalyzing = entity.isAnalyzing
+                    isAnalyzing = entity.isAnalyzing,
+                    thumbnailUrl = entity.thumbnailUrl
                 )
             }
         }
@@ -87,7 +90,8 @@ class HomeViewModel @Inject constructor(
                 url = link.url,
                 title = link.title,
                 summary = link.summary,
-                tags = link.tags
+                tags = link.tags,
+                thumbnailUrl = link.thumbnailUrl
             )
             linkRepository.deleteLink(entity)
         }

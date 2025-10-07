@@ -10,5 +10,6 @@ data class LinkEntity(
     val summary: String,
     val tags: List<String>,
     val timestamp: Long = System.currentTimeMillis(),
-    val isAnalyzing: Boolean = false
+    val isAnalyzing: Boolean = false,
+    val thumbnailUrl: String? = null
 )

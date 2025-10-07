@@ -66,9 +66,10 @@ class LinkAnalysisService : Service() {
                 val title = analysisResult?.title ?: url
                 val summary = analysisResult?.summary ?: "Could not analyze URL."
                 val tags = analysisResult?.tags ?: emptyList()
+                val thumbnailUrl = analysisResult?.thumbnailUrl
 
                 withContext(Dispatchers.IO) {
-                    linkRepository.insertLink(url, title, summary, tags)
+                    linkRepository.insertLink(url, title, summary, tags, thumbnailUrl)
                 }
                 Log.d("LinkAnalysis", "Successfully saved link with title: $title")
             } catch (e: Exception) {

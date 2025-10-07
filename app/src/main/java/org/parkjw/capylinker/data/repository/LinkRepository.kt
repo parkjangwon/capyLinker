@@ -20,6 +20,7 @@ class LinkRepository @Inject constructor(
             title = "Analyzing...",
             summary = "AI analysis in progress...",
             tags = emptyList(),
+            thumbnailUrl = null,
             isAnalyzing = true
         )
         linkDao.insertLink(tempLink)
@@ -34,6 +35,7 @@ class LinkRepository @Inject constructor(
                     title = it.title,
                     summary = it.summary,
                     tags = it.tags,
+                    thumbnailUrl = it.thumbnailUrl,
                     timestamp = tempLink.timestamp,
                     isAnalyzing = false
                 )
@@ -46,6 +48,7 @@ class LinkRepository @Inject constructor(
                 title = "Analysis Failed",
                 summary = "Failed to analyze: ${e.message}",
                 tags = emptyList(),
+                thumbnailUrl = null,
                 timestamp = tempLink.timestamp,
                 isAnalyzing = false
             )
@@ -57,12 +60,13 @@ class LinkRepository @Inject constructor(
         linkDao.deleteLink(link)
     }
 
-    suspend fun insertLink(url: String, title: String, summary: String, tags: List<String>) {
+    suspend fun insertLink(url: String, title: String, summary: String, tags: List<String>, thumbnailUrl: String? = null) {
         val newItem = LinkEntity(
             url = url,
             title = title,
             summary = summary,
-            tags = tags
+            tags = tags,
+            thumbnailUrl = thumbnailUrl
         )
         linkDao.insertLink(newItem)
     }

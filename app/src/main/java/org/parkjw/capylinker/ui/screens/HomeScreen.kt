@@ -18,10 +18,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import org.parkjw.capylinker.viewmodel.HomeViewModel
+
+data class Link(
+    val title: String,
+    val url: String,
+    val summary: String,
+    val tags: List<String>,
+    val isAnalyzing: Boolean = false,
+    val thumbnailUrl: String? = null
+)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -162,51 +174,68 @@ private fun LinkItem(
                 onLongClick = onLongClick
             ),
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = link.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (link.title.contains("Error") || link.title.contains("Quota")) 
-                        MaterialTheme.colorScheme.error 
-                    else 
-                        MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f)
+            // 썸네일 이미지
+            if (!link.thumbnailUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = link.thumbnailUrl,
+                    contentDescription = "Thumbnail",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(end = 12.dp),
+                    contentScale = ContentScale.Crop
                 )
-                if (link.isAnalyzing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
-                    )
-                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = link.summary,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = if (isExpanded) Int.MAX_VALUE else 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
             ) {
-                link.tags.forEach { tag ->
-                    TagChip(tag)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = link.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (link.title.contains("Error") || link.title.contains("Quota"))
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (link.isAnalyzing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = link.summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    link.tags.forEach { tag ->
+                        TagChip(tag)
+                    }
                 }
             }
         }
@@ -220,11 +249,3 @@ private fun TagChip(tag: String) {
         label = { Text(tag) }
     )
 }
-
-data class Link(
-    val title: String,
-    val url: String,
-    val summary: String,
-    val tags: List<String>,
-    val isAnalyzing: Boolean = false
-)

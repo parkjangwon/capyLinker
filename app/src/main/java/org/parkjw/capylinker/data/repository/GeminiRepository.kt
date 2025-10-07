@@ -15,7 +15,8 @@ import javax.inject.Singleton
 data class AnalysisResult(
     val title: String,
     val summary: String,
-    val tags: List<String>
+    val tags: List<String>,
+    val thumbnailUrl: String? = null
 )
 
 @Singleton
@@ -39,15 +40,18 @@ class GeminiRepository @Inject constructor(
             initializeModel()
         }
         if (generativeModel == null) {
-            return AnalysisResult("No title", "API key not set", emptyList())
+            return AnalysisResult("No title", "API key not set", emptyList(), null)
         }
 
         return withContext(Dispatchers.IO) {
             try {
                 val content = fetchUrlContent(url)
                 if (content.isBlank()) {
-                    return@withContext AnalysisResult("No title", "Could not fetch content from URL", emptyList())
+                    return@withContext AnalysisResult("No title", "Could not fetch content from URL", emptyList(), null)
                 }
+
+                // 썸네일 이미지 URL 추출
+                val thumbnailUrl = extractThumbnailUrl(content, url)
 
                 // 콘텐츠 길이 제한 (토큰 사용량 절감)
                 val truncatedContent = if (content.length > 3000) {
@@ -92,7 +96,7 @@ class GeminiRepository @Inject constructor(
                 repeat(maxRetries) { attempt ->
                     try {
                         val response = generativeModel!!.generateContent(prompt)
-                        return@withContext parseResponse(response)
+                        return@withContext parseResponse(response, thumbnailUrl)
                     } catch (e: Exception) {
                         lastException = e
                         val errorMessage = e.message ?: ""
@@ -110,7 +114,8 @@ class GeminiRepository @Inject constructor(
                                 return@withContext AnalysisResult(
                                     "Quota Exceeded",
                                     "API quota exceeded. Please try again later or upgrade your plan.",
-                                    emptyList()
+                                    emptyList(),
+                                    thumbnailUrl
                                 )
                             }
                         } else {
@@ -121,7 +126,7 @@ class GeminiRepository @Inject constructor(
                 }
 
                 // 모든 재시도 실패
-                AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList())
+                AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), thumbnailUrl)
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -132,7 +137,7 @@ class GeminiRepository @Inject constructor(
                         "Network error. Please check your connection."
                     else -> "Failed to analyze: ${e.message}"
                 }
-                AnalysisResult("Error", errorMsg, emptyList())
+                AnalysisResult("Error", errorMsg, emptyList(), null)
             }
         }
     }
@@ -144,8 +149,8 @@ class GeminiRepository @Inject constructor(
         return match?.groupValues?.getOrNull(1)?.toDoubleOrNull() ?: 2.0
     }
 
-    private fun parseResponse(response: GenerateContentResponse): AnalysisResult {
-        val text = response.text ?: return AnalysisResult("", "Empty response from API", emptyList())
+    private fun parseResponse(response: GenerateContentResponse, thumbnailUrl: String?): AnalysisResult {
+        val text = response.text ?: return AnalysisResult("", "Empty response from API", emptyList(), thumbnailUrl)
         val titlePrefix = "TITLE:"
         val summaryPrefix = "SUMMARY:"
         val tagsPrefix = "TAGS:"
@@ -177,7 +182,48 @@ class GeminiRepository @Inject constructor(
             emptyList()
         }
 
-        return AnalysisResult(title, summary, tags)
+        return AnalysisResult(title, summary, tags, thumbnailUrl)
+    }
+
+    private fun extractThumbnailUrl(htmlContent: String, baseUrl: String): String? {
+        try {
+            // Open Graph 이미지 추출
+            val ogImageRegex = """<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']""".toRegex(RegexOption.IGNORE_CASE)
+            ogImageRegex.find(htmlContent)?.groupValues?.getOrNull(1)?.let { return resolveUrl(it, baseUrl) }
+
+            // Twitter Card 이미지 추출
+            val twitterImageRegex = """<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']""".toRegex(RegexOption.IGNORE_CASE)
+            twitterImageRegex.find(htmlContent)?.groupValues?.getOrNull(1)?.let { return resolveUrl(it, baseUrl) }
+
+            // 일반 meta image 태그
+            val metaImageRegex = """<meta\s+property=["']image["']\s+content=["']([^"']+)["']""".toRegex(RegexOption.IGNORE_CASE)
+            metaImageRegex.find(htmlContent)?.groupValues?.getOrNull(1)?.let { return resolveUrl(it, baseUrl) }
+
+            // link rel="image_src"
+            val linkImageRegex = """<link\s+rel=["']image_src["']\s+href=["']([^"']+)["']""".toRegex(RegexOption.IGNORE_CASE)
+            linkImageRegex.find(htmlContent)?.groupValues?.getOrNull(1)?.let { return resolveUrl(it, baseUrl) }
+
+            return null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    private fun resolveUrl(imageUrl: String, baseUrl: String): String {
+        return when {
+            imageUrl.startsWith("http://") || imageUrl.startsWith("https://") -> imageUrl
+            imageUrl.startsWith("//") -> "https:$imageUrl"
+            imageUrl.startsWith("/") -> {
+                val url = URL(baseUrl)
+                "${url.protocol}://${url.host}$imageUrl"
+            }
+            else -> {
+                val url = URL(baseUrl)
+                val path = url.path.substringBeforeLast('/')
+                "${url.protocol}://${url.host}$path/$imageUrl"
+            }
+        }
     }
 
     private fun fetchUrlContent(urlString: String): String {

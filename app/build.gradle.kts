@@ -113,6 +113,21 @@ dependencies {
     // Google AI (Gemini)
     implementation("com.google.ai.client.generativeai:generativeai:0.2.2")
 
+        // Coil for image loading
+        implementation("io.coil-kt:coil-compose:2.5.0")
+
+        // Jsoup for HTML parsing
+        implementation("org.jsoup:jsoup:1.17.2")
+
+    // Coil for Image Loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Jsoup for HTML parsing
+    implementation("org.jsoup:jsoup:1.17.2")
+
+    // Coil (Image Loading)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     // Test
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
