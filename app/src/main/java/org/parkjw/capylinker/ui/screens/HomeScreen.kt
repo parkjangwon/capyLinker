@@ -185,12 +185,13 @@ fun HomeScreen(
         LinkContextMenu(
             link = link,
             onDismiss = { showContextMenu.value = null },
+            onOpen = {
+                showContextMenu.value = null
+            },
             onCopyUrl = { 
-                // Implement copy to clipboard
                 showContextMenu.value = null
             },
             onShare = {
-                // Implement share
                 showContextMenu.value = null
             },
             onDelete = {

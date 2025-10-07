@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 fun LinkContextMenu(
     link: Link,
     onDismiss: () -> Unit,
+    onOpen: () -> Unit,
     onCopyUrl: () -> Unit,
     onShare: () -> Unit,
     onDelete: () -> Unit
@@ -33,6 +34,25 @@ fun LinkContextMenu(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = android.net.Uri.parse(link.url)
+                        }
+                        context.startActivity(intent)
+                        onOpen()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        painter = painterResource(android.R.drawable.ic_menu_view),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Open")
+                }
+
                 OutlinedButton(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
