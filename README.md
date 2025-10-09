@@ -79,7 +79,7 @@ The app supports 10 languages with full UI translation:
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Android device/emulator running Android 7.0 (API 24) or higher
+- Android device/emulator running Android 15 (API 35) or higher
 - Android Studio (for development)
 - Google Gemini API key (free tier available)
 
