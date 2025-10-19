@@ -25,7 +25,7 @@ android {
         applicationId = "org.parkjw.capylinker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
+        versionCode = 3
         versionName = "1.1.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -88,7 +88,7 @@ android {
 }
 
 dependencies {
-implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -123,28 +123,17 @@ implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // Room (Database)
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
-
     // DataStore (Settings)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Google AI (Gemini)
     implementation("com.google.ai.client.generativeai:generativeai:0.2.2")
 
-    // Google Mobile Ads
-    implementation("com.google.android.gms:play-services-ads:23.0.0")
-
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Jsoup for HTML parsing
     implementation("org.jsoup:jsoup:1.17.2")
-
-    // Coil (Image Loading)
-    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Test
     testImplementation("junit:junit:4.13.2")
