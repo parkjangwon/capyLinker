@@ -3,9 +3,12 @@ package org.parkjw.capylinker
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,38 +31,41 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         MobileAds.initialize(this) { }
 
         setContent {
             val theme by settingsRepository.theme.collectAsState(initial = "system")
             val systemDarkTheme = isSystemInDarkTheme()
 
-            val darkTheme = when(theme) {
+            val darkTheme = when (theme) {
                 "light" -> false
                 "dark" -> true
                 else -> systemDarkTheme
             }
 
             CapyLinkerTheme(darkTheme = darkTheme) {
-                Column {
-                    AppNavHost(
-                        modifier = Modifier.weight(1f)
-                    )
-                    AndroidView(
-                        modifier = Modifier.fillMaxWidth(),
-                        factory = { context ->
-                            val adView = AdView(context)
-                            adView.adUnitId = "ca-app-pub-5102109520705013/6345460267"
+                Scaffold {
+                    Column(Modifier.padding(it)) {
+                        AppNavHost(
+                            modifier = Modifier.weight(1f)
+                        )
+                        AndroidView(
+                            modifier = Modifier.fillMaxWidth(),
+                            factory = { context ->
+                                val adView = AdView(context)
+                                adView.adUnitId = "ca-app-pub-5102109520705013/6345460267"
 
-                            val adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-                                context,
-                                (resources.displayMetrics.widthPixels / resources.displayMetrics.density).toInt()
-                            )
-                            adView.setAdSize(adSize)
-                            adView.loadAd(AdRequest.Builder().build())
-                            adView
-                        }
-                    )
+                                val adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+                                    context,
+                                    (resources.displayMetrics.widthPixels / resources.displayMetrics.density).toInt()
+                                )
+                                adView.setAdSize(adSize)
+                                adView.loadAd(AdRequest.Builder().build())
+                                adView
+                            }
+                        )
+                    }
                 }
             }
         }
