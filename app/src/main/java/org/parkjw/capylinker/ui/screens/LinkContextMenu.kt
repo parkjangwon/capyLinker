@@ -1,9 +1,11 @@
 package org.parkjw.capylinker.ui.screens
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -39,10 +41,18 @@ fun LinkContextMenu(
             ) {
                 OutlinedButton(
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                            data = android.net.Uri.parse(link.url)
+                        try {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                data = android.net.Uri.parse(link.url)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(
+                                context,
+                                "링크를 열 수 없습니다. URL을 확인해주세요.",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-                        context.startActivity(intent)
                         onOpen()
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -58,7 +68,8 @@ fun LinkContextMenu(
 
                 OutlinedButton(
                     onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("URL", link.url)
                         clipboard.setPrimaryClip(clip)
                         onCopyUrl()
