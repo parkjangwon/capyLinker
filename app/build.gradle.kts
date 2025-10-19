@@ -134,13 +134,10 @@ implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     // Google AI (Gemini)
     implementation("com.google.ai.client.generativeai:generativeai:0.2.2")
 
-        // Coil for image loading
-        implementation("io.coil-kt:coil-compose:2.5.0")
+    // Google Mobile Ads
+    implementation("com.google.android.gms:play-services-ads:23.0.0")
 
-        // Jsoup for HTML parsing
-        implementation("org.jsoup:jsoup:1.17.2")
-
-    // Coil for Image Loading
+    // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // Jsoup for HTML parsing

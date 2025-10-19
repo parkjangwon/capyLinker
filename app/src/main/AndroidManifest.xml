@@ -18,6 +18,11 @@
         android:theme="@style/Theme.CapyLinker"
         android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-5102109520705013~4205354411"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
