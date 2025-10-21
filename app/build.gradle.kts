@@ -25,7 +25,7 @@ android {
         applicationId = "org.parkjw.capylinker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
+        versionCode = 5
         versionName = "1.1.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -128,6 +128,9 @@ dependencies {
 
     // Google AI (Gemini)
     implementation("com.google.ai.client.generativeai:generativeai:0.2.2")
+
+    // Google Mobile Ads
+    implementation("com.google.android.gms:play-services-ads:23.0.0")
 
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
