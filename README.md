@@ -4,6 +4,8 @@
   <img src=".github/images/capyLinkerLogo.png" alt="CapyLinker Logo" width="300"/>
 </p>
 
+<a href='https://play.google.com/store/apps/details?id=org.parkjw.capylinker&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' width='200'/></a>
+
 **CapyLinker** is an intelligent link management Android app powered by Google's Gemini AI. Save, organize, and analyze your bookmarks with AI-generated summaries and smart tagging.
 
 ## ✨ Features
@@ -228,7 +230,7 @@ Long-press any link to access quick actions:
 3. Tap **"Restore Backup"**
 4. Select your backup JSON file
 5. All data will be restored and overwrite existing data
-6. A success message will appear when complete
+- A success message will appear when complete
 
 > **⚠️ Warning**: Restoring a backup will **replace all existing data**. Make sure to create a backup of your current data before restoring if you want to keep it.
 
