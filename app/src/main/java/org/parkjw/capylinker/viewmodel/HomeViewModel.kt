@@ -130,8 +130,10 @@ class HomeViewModel @Inject constructor(
             if (!autoAdd) return@launch
 
             if (!clipboardText.isNullOrBlank() && isValidUrl(clipboardText)) {
-                _clipboardUrl.value = clipboardText
-                _showClipboardDialog.value = true
+                if (!linkRepository.isUrlExist(clipboardText)) {
+                    _clipboardUrl.value = clipboardText
+                    _showClipboardDialog.value = true
+                }
             }
         }
     }

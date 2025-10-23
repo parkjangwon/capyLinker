@@ -15,6 +15,10 @@ class LinkRepository @Inject constructor(
 ) {
     fun getAllLinks() = linkDao.getAllLinks()
 
+    suspend fun isUrlExist(url: String): Boolean {
+        return linkDao.getLinkByUrl(url) != null
+    }
+
     suspend fun saveLink(url: String) {
         android.util.Log.d("LinkRepository", "Saving link: $url")
         val language = settingsRepository.language.first()
