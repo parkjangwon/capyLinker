@@ -6,6 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -57,6 +59,11 @@ class GeminiRepository @Inject constructor(
                 val githubRepoInfo = extractGitHubRepoInfo(url)
                 if (githubRepoInfo != null) {
                     return@withContext analyzeGitHubRepo(githubRepoInfo.first, githubRepoInfo.second, url, maxRetries)
+                }
+
+                // Reddit 링크 확인
+                if (isRedditUrl(url)) {
+                    return@withContext analyzeRedditPost(url, maxRetries)
                 }
 
                 // Notion 링크 확인
@@ -641,6 +648,197 @@ class GeminiRepository @Inject constructor(
                 title = "Notion Page",
                 summary = "Failed to load Notion page information.",
                 tags = emptyList(),
+                thumbnailUrl = null
+            )
+        }
+    }
+
+    private fun isRedditUrl(url: String): Boolean {
+        return url.contains("reddit.com", ignoreCase = true) &&
+               url.contains("/comments/", ignoreCase = true)
+    }
+
+    private fun buildRedditJsonUrl(originalUrl: String): String {
+        val clean = originalUrl.substringBefore("?").removeSuffix("/")
+        return "$clean.json?raw_json=1"
+    }
+
+    private fun fetchRedditPostJson(jsonUrl: String): String? {
+        return try {
+            val url = URL(jsonUrl)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
+            // Reddit은 명시적인 User-Agent를 요구함
+            connection.setRequestProperty("User-Agent", "CapyLinker/1.0 (Android; RedditPostSummary)")
+            connection.setRequestProperty("Accept", "application/json")
+            connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9,ko;q=0.8")
+            connection.instanceFollowRedirects = true
+            connection.connect()
+
+            if (connection.responseCode != 200) {
+                android.util.Log.e("RedditAPI", "Failed to fetch Reddit JSON: ${connection.responseCode}")
+                return null
+            }
+
+            val reader = BufferedReader(InputStreamReader(connection.inputStream, Charsets.UTF_8))
+            val content = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                content.append(line)
+            }
+            reader.close()
+            content.toString()
+        } catch (e: Exception) {
+            android.util.Log.e("RedditAPI", "Error fetching Reddit JSON", e)
+            null
+        }
+    }
+
+    private suspend fun analyzeRedditPost(url: String, maxRetries: Int): AnalysisResult {
+        return try {
+            val jsonUrl = buildRedditJsonUrl(url)
+            val jsonString = fetchRedditPostJson(jsonUrl)
+            if (jsonString.isNullOrBlank()) {
+                return AnalysisResult(
+                    title = "Reddit Post",
+                    summary = "Failed to fetch Reddit post content.",
+                    tags = listOf("reddit"),
+                    thumbnailUrl = null
+                )
+            }
+
+            val jsonArray = JSONArray(jsonString)
+            if (jsonArray.length() == 0) {
+                return AnalysisResult(
+                    title = "Reddit Post",
+                    summary = "No data in Reddit response.",
+                    tags = listOf("reddit"),
+                    thumbnailUrl = null
+                )
+            }
+
+            val listing = jsonArray.getJSONObject(0)
+            val children = listing.getJSONObject("data").getJSONArray("children")
+            if (children.length() == 0) {
+                return AnalysisResult(
+                    title = "Reddit Post",
+                    summary = "No post found in Reddit response.",
+                    tags = listOf("reddit"),
+                    thumbnailUrl = null
+                )
+            }
+
+            val postData = children.getJSONObject(0).getJSONObject("data")
+            val postTitle = postData.optString("title").ifBlank { "Reddit Post" }
+            val subreddit = postData.optString("subreddit")
+            val author = postData.optString("author")
+
+            var body = postData.optString("selftext")
+            if (body.isBlank()) {
+                val selftextHtml = postData.optString("selftext_html")
+                if (selftextHtml.isNotBlank()) {
+                    body = Jsoup.parse(selftextHtml).text()
+                }
+            }
+
+            // 썸네일 추출
+            var thumbnailUrl: String? = null
+            postData.optJSONObject("preview")?.let { preview ->
+                val images = preview.optJSONArray("images")
+                if (images != null && images.length() > 0) {
+                    val source = images.getJSONObject(0).optJSONObject("source")
+                    val urlStr = source?.optString("url")
+                    if (!urlStr.isNullOrBlank()) {
+                        thumbnailUrl = urlStr.replace("&amp;", "&")
+                    }
+                }
+            }
+            if (thumbnailUrl == null) {
+                val thumb = postData.optString("thumbnail")
+                if (thumb.startsWith("http")) {
+                    thumbnailUrl = thumb
+                }
+            }
+
+            val truncatedBody = if (body.length > 3000) body.take(3000) + "..." else body
+
+            val language = settingsRepository.language.first()
+            val languageInstruction = when (language) {
+                "ko" -> "한국어로 답변해주세요."
+                "en" -> "Please respond in English."
+                "ja" -> "日本語で回答してください。"
+                "zh-CN" -> "请用简体中文回答。"
+                "zh-TW" -> "請用繁體中文回答。"
+                "es" -> "Por favor, responde en español."
+                "fr" -> "Veuillez répondre en français."
+                "de" -> "Bitte antworten Sie auf Deutsch."
+                "ru" -> "Пожалуйста, отвечайте на русском языке."
+                "pt" -> "Por favor, responda em português."
+                else -> "Please respond in English."
+            }
+
+            val prompt = """
+                $languageInstruction
+
+                Analyze the following Reddit post and provide:
+                1. A short title (one sentence)
+                2. A detailed summary (max 200 words)
+                3. 3 relevant keywords or tags
+
+                Format the output exactly as:
+                TITLE: [Your title in the specified language]
+                SUMMARY: [Your summary in the specified language]
+                TAGS: [tag1,tag2,tag3]
+
+                Subreddit: r/$subreddit
+                Author: u/$author
+                Post Title: $postTitle
+                Post Body: $truncatedBody
+                Post URL: $url
+            """.trimIndent()
+
+            var lastException: Exception? = null
+            repeat(maxRetries) { attempt ->
+                try {
+                    val response = generativeModel!!.generateContent(prompt)
+                    return parseResponse(response, thumbnailUrl)
+                } catch (e: Exception) {
+                    lastException = e
+                    val errorMessage = e.message ?: ""
+
+                    if (errorMessage.contains("quota", ignoreCase = true) ||
+                        errorMessage.contains("rate limit", ignoreCase = true)) {
+                        val retryDelay = extractRetryDelay(errorMessage)
+                        if (attempt < maxRetries - 1) {
+                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
+                        } else {
+                            return AnalysisResult(
+                                "Quota Exceeded",
+                                "API quota exceeded. Please try again later.",
+                                emptyList(),
+                                thumbnailUrl
+                            )
+                        }
+                    } else {
+                        throw e
+                    }
+                }
+            }
+
+            AnalysisResult(
+                "Error",
+                "Failed after $maxRetries attempts: ${lastException?.message}",
+                emptyList(),
+                thumbnailUrl
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("RedditAnalysis", "Error analyzing Reddit post", e)
+            AnalysisResult(
+                title = "Reddit Post",
+                summary = "Failed to analyze Reddit post: ${e.message}",
+                tags = listOf("reddit", "error"),
                 thumbnailUrl = null
             )
         }
