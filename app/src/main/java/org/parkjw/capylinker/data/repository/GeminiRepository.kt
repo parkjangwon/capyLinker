@@ -296,6 +296,10 @@ class GeminiRepository @Inject constructor(
                url.contains("blog.naver.com", ignoreCase = true) ||
                url.contains("cafe.naver.com", ignoreCase = true) ||
                url.contains("brunch.co.kr", ignoreCase = true) ||
+               url.contains("claude.ai", ignoreCase = true) ||
+               url.contains("www.perplexity.ai", ignoreCase = true) ||
+               url.contains("gemini.google.com", ignoreCase = true) ||
+               url.contains("grok.com", ignoreCase = true) ||
                url.contains("spotify.com", ignoreCase = true) ||
                url.contains("x.com", ignoreCase = true) ||
                url.contains("twitter.com", ignoreCase = true)
