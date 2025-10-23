@@ -15,13 +15,19 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(context: Context): SettingsRepository {
+    fun provideSettingsRepository(@dagger.hilt.android.qualifiers.ApplicationContext context: Context): SettingsRepository {
         return SettingsRepository(context)
     }
 
     @Provides
     @Singleton
-    fun provideGeminiRepository(settingsRepository: SettingsRepository): GeminiRepository {
-        return GeminiRepository(settingsRepository)
+    fun provideGeminiRepository(
+        settingsRepository: SettingsRepository,
+        @dagger.hilt.android.qualifiers.ApplicationContext context: Context
+    ): GeminiRepository {
+        return GeminiRepository(
+            settingsRepository,
+            org.parkjw.capylinker.data.repository.WebPageContentFetcher(context)
+        )
     }
 }

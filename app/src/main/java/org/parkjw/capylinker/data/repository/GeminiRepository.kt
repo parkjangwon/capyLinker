@@ -24,7 +24,8 @@ data class AnalysisResult(
 
 @Singleton
 class GeminiRepository @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val webPageContentFetcher: WebPageContentFetcher
 ) {
     private var generativeModel: GenerativeModel? = null
 
@@ -589,68 +590,389 @@ class GeminiRepository @Inject constructor(
 
     private suspend fun analyzeNotionPage(url: String, maxRetries: Int): AnalysisResult {
         return try {
-            // 노션 URL 정리 (쿼리 파라미터 제거)
-            val cleanUrl = url.split("?").first()
+            // 노션 URL 정리 (?source 등 제거 후 SSR 힌트 부여)
+            val cleanUrl = url.substringBefore("?")
+            val targetUrl = "$cleanUrl?pvs=4"
 
-            android.util.Log.d("NotionAnalysis", "Notion page detected: $cleanUrl")
+            android.util.Log.d("NotionAnalysis", "Notion page detected: $targetUrl")
 
-            // Notion 페이지의 HTML 가져오기
-            val htmlContent = fetchUrlContent(cleanUrl)
-            val doc = Jsoup.parse(htmlContent, cleanUrl)
+            // 0) r.jina.ai 가독화 텍스트 우선 시도 (가장 안정적으로 본문을 반환함)
+            val jinaPrimary = fetchReadableContentViaJina(targetUrl)?.trim().orEmpty()
+            val jinaText = if (jinaPrimary.isNotBlank()) jinaPrimary
+            else fetchReadableContentViaJina(cleanUrl)?.trim().orEmpty()
 
-            // 제목 추출 시도
-            var title = doc.selectFirst("meta[property=og:title]")?.attr("content")
-                ?: doc.selectFirst("meta[name=twitter:title]")?.attr("content")
-                ?: doc.selectFirst("title")?.text()
+            var bodyText = ""
+            var doc: org.jsoup.nodes.Document? = null
+
+            if (jinaText.isNotBlank()) {
+                bodyText = jinaText
+                // OG 메타 추출을 위해 가볍게 HTML도 시도 (실패해도 무시)
+                try {
+                    val html = fetchUrlContent(targetUrl)
+                    doc = Jsoup.parse(html, targetUrl)
+                } catch (_: Exception) { }
+            } else {
+                // 1) WebView 렌더링 결과 확보 (대기/타임아웃을 약간 늘림)
+                val renderedHtml = try {
+                    webPageContentFetcher.getFullPageHtml(
+                        targetUrl,
+                        waitAfterLoadMs = 1800L,
+                        timeoutMs = 20000L
+                    ) ?: ""
+                } catch (e: Exception) {
+                    android.util.Log.e("NotionAnalysis", "WebView render failed", e)
+                    ""
+                }
+
+                // 2) 실패 시 정적 fetch 보조
+                val htmlToUse = if (renderedHtml.isNotBlank()) renderedHtml else fetchUrlContent(targetUrl)
+                doc = Jsoup.parse(htmlToUse, targetUrl)
+
+                // 3) 본문 추출 파이프라인 (DOM → __NEXT_DATA__ → public recordMap → 좁은 셀렉터 → body)
+                bodyText = extractTextFromNotionDom(doc)
+                if (bodyText.isBlank()) {
+                    bodyText = extractTextFromNextData(doc) ?: ""
+                }
+                if (bodyText.isBlank()) {
+                    val pageId = extractNotionPageId(cleanUrl)
+                    if (pageId != null) {
+                        val recordMap = fetchNotionPublicRecordMap(pageId)
+                        if (recordMap != null) {
+                            val fromMap = flattenNotionBlocks(recordMap).trim()
+                            if (fromMap.isNotBlank()) bodyText = fromMap
+                        }
+                    }
+                }
+                if (bodyText.isBlank()) {
+                    val narrow = doc.select(
+                        ".notion-page-content h1, .notion-page-content h2, .notion-page-content h3, " +
+                            ".notion-page-content p, .notion-page-content li, [data-block-id]"
+                    ).eachText().joinToString("\n") { it.trim() }.trim()
+                    if (narrow.isNotBlank()) bodyText = narrow
+                }
+                if (bodyText.isBlank()) {
+                    bodyText = doc.body()?.text()?.trim().orEmpty()
+                }
+            }
+
+            // 제목/썸네일
+            var title = doc?.selectFirst("meta[property=og:title]")?.attr("content")
+                ?: doc?.selectFirst("meta[name=twitter:title]")?.attr("content")
+                ?: doc?.selectFirst("title")?.text()
                 ?: ""
-
-            // 제목이 비어있으면 URL에서 추출
             if (title.isBlank()) {
-                title = cleanUrl.substringAfterLast("/")
-                    .substringBefore("-")
-                    .replace("-", " ")
-                    .split(" ")
-                    .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+                // 본문 첫 줄을 보조 타이틀로 사용
+                title = bodyText.lineSequence().firstOrNull { it.isNotBlank() }?.take(80)?.trim().orElse("")
+            }
+            if (title.isBlank()) title = "Notion Page"
+
+            val thumbnailUrl = doc?.selectFirst("meta[property=og:image]")?.attr("content")
+                ?: doc?.selectFirst("meta[name=twitter:image]")?.attr("content")
+
+            // 본문을 여전히 못 얻었다면 안내 반환
+            if (bodyText.isBlank()) {
+                val language = settingsRepository.language.first()
+                val msg = when (language) {
+                    "ko" -> "노션 페이지의 본문을 가져오지 못했습니다. 브라우저에서 열어 확인해주세요."
+                    "ja" -> "Notionページの本文を取得できませんでした。ブラウザで開いて確認してください。"
+                    "zh-CN" -> "未能获取 Notion 页面的正文。请在浏览器中查看。"
+                    "zh-TW" -> "未能取得 Notion 頁面的內文。請在瀏覽器中查看。"
+                    "es" -> "No se pudo obtener el contenido de la página de Notion. Ábrela en el navegador."
+                    "fr" -> "Impossible d’obtenir le contenu de la page Notion. Ouvrez-la dans le navigateur."
+                    "de" -> "Der Inhalt der Notion-Seite konnte nicht abgerufen werden. Bitte im Browser prüfen."
+                    "ru" -> "Не удалось получить содержимое страницы Notion. Откройте в браузере."
+                    "pt" -> "Não foi possível obter o conteúdo da página do Notion. Abra no navegador."
+                    else -> "Could not fetch the Notion page content. Please open it in the browser."
+                }
+                return AnalysisResult(title = title, summary = msg, tags = emptyList(), thumbnailUrl = thumbnailUrl)
             }
 
-            if (title.isBlank()) {
-                title = "Notion Page"
-            }
-
-            // 썸네일 추출
-            val thumbnailUrl = doc.selectFirst("meta[property=og:image]")?.attr("content")
-                ?: doc.selectFirst("meta[name=twitter:image]")?.attr("content")
+            // 길이 제한 후 요약
+            val truncated = if (bodyText.length > 3500) bodyText.take(3500) + "..." else bodyText
 
             val language = settingsRepository.language.first()
+            val languageInstruction = when (language) {
+                "ko" -> "한국어로 답변해주세요."
+                "en" -> "Please respond in English."
+                "ja" -> "日本語で回答してください。"
+                "zh-CN" -> "请用简体中文回答。"
+                "zh-TW" -> "請用繁體中文回答。"
+                "es" -> "Por favor, responde en español."
+                "fr" -> "Veuillez répondre en français."
+                "de" -> "Bitte antworten Sie auf Deutsch."
+                "ru" -> "Пожалуйста, отвечайте на русском языке."
+                "pt" -> "Por favor, responda em português."
+                else -> "Please respond in English."
+            }
 
-            // Gemini 호출 없이 간단한 메시지만 반환
-            android.util.Log.d("NotionAnalysis", "Returning simple message for Notion page")
+            val prompt = """
+                $languageInstruction
+
+                Analyze the following Notion page content and provide:
+                1. A short title (one sentence)
+                2. A detailed summary (max 200 words)
+                3. 3 relevant keywords or tags
+
+                Format the output exactly as:
+                TITLE: [Your title in the specified language]
+                SUMMARY: [Your summary in the specified language]
+                TAGS: [tag1,tag2,tag3]
+
+                Page Title: $title
+                Content:
+                $truncated
+                Source URL: $cleanUrl
+            """.trimIndent()
+
+            var lastException: Exception? = null
+            repeat(maxRetries) { attempt ->
+                try {
+                    val response = generativeModel!!.generateContent(prompt)
+                    return parseResponse(response, thumbnailUrl)
+                } catch (e: Exception) {
+                    lastException = e
+                    val errorMessage = e.message ?: ""
+                    if (errorMessage.contains("quota", ignoreCase = true) ||
+                        errorMessage.contains("rate limit", ignoreCase = true)) {
+                        val retryDelay = extractRetryDelay(errorMessage)
+                        if (attempt < maxRetries - 1) {
+                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
+                        } else {
+                            return AnalysisResult(
+                                "Quota Exceeded",
+                                "API quota exceeded. Please try again later.",
+                                emptyList(),
+                                thumbnailUrl
+                            )
+                        }
+                    } else {
+                        throw e
+                    }
+                }
+            }
+
             AnalysisResult(
-                title = title,
-                summary = when (language) {
-                    "ko" -> "노션 페이지는 동적 콘텐츠로 제한된 정보만 제공될 수 있습니다."
-                    "ja" -> "Notionページは動的コンテンツのため、限られた情報のみ利用可能です。"
-                    "zh-CN" -> "Notion页面具有动态内容，可能只能提供有限的信息。"
-                    "zh-TW" -> "Notion頁面具有動態內容，可能只能提供有限的資訊。"
-                    "es" -> "Las páginas de Notion tienen contenido dinámico. Puede haber información limitada disponible."
-                    "fr" -> "Les pages Notion ont du contenu dynamique. Des informations limitées peuvent être disponibles."
-                    "de" -> "Notion-Seiten haben dynamische Inhalte. Möglicherweise sind nur begrenzte Informationen verfügbar."
-                    "ru" -> "Страницы Notion имеют динамический контент. Может быть доступна ограниченная информация."
-                    "pt" -> "As páginas do Notion têm conteúdo dinâmico. Informações limitadas podem estar disponíveis."
-                    else -> "Notion pages have dynamic content. Limited information may be available."
-                },
-                tags = emptyList(),
-                thumbnailUrl = thumbnailUrl
+                "Error",
+                "Failed after $maxRetries attempts: ${lastException?.message}",
+                emptyList(),
+                thumbnailUrl
             )
         } catch (e: Exception) {
             android.util.Log.e("NotionAnalysis", "Error processing Notion page", e)
             AnalysisResult(
                 title = "Notion Page",
-                summary = "Failed to load Notion page information.",
+                summary = "Failed to analyze Notion page: ${e.message}",
                 tags = emptyList(),
                 thumbnailUrl = null
             )
         }
+    }
+
+    // Kotlin String 보조 확장
+    private fun String?.orElse(fallback: String): String = if (this.isNullOrBlank()) fallback else this
+
+    // DOM 기반 Notion 텍스트 추출
+    private fun extractTextFromNotionDom(doc: org.jsoup.nodes.Document): String {
+        return try {
+            val chunks = mutableListOf<String>()
+
+            // 주요 SSR 컨테이너
+            doc.select("main, article, .notion-page-content, .notion-frame, .notion, .notion-app-inner").forEach { el ->
+                val t = el.text().trim()
+                if (t.isNotBlank()) chunks += t
+            }
+
+            // 헤딩/문단/인용/목록 등 일반 구조
+            if (chunks.isEmpty()) {
+                val structured = doc.select(
+                    "h1,h2,h3,h4,[role=heading],[role=paragraph],p,blockquote,ul,ol,li," +
+                        ".notion-text,.notion-quote,.notion-numbered_list,.notion-bulleted_list,.notion-code"
+                ).eachText().map { it.trim() }.filter { it.isNotBlank() }
+                if (structured.isNotEmpty()) chunks += structured.joinToString("\n")
+            }
+
+            // Notion 블록 속성
+            if (chunks.isEmpty()) {
+                val blockTexts = doc.select("[data-block-id]").map { it.text().trim() }.filter { it.isNotBlank() }
+                if (blockTexts.isNotEmpty()) chunks += blockTexts.joinToString("\n")
+            }
+
+            // 최후의 수단: body 전체
+            if (chunks.isEmpty()) {
+                val body = doc.body()?.text()?.trim().orEmpty()
+                if (body.isNotBlank()) chunks += body
+            }
+
+            chunks
+                .flatMap { it.lines() }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("\n")
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    // __NEXT_DATA__ JSON에서 텍스트 추출
+    private fun extractTextFromNextData(doc: org.jsoup.nodes.Document): String? {
+        return try {
+            val script = doc.selectFirst("script#__NEXT_DATA__")?.data() ?: return null
+            val root = JSONObject(script)
+            val recordMap = root
+                .optJSONObject("props")
+                ?.optJSONObject("pageProps")
+                ?.optJSONObject("recordMap")
+                ?: return null
+            val flattened = flattenNotionBlocks(recordMap).trim()
+            if (flattened.isBlank()) null else flattened
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // Notion recordMap.block을 순회하며 텍스트 평탄화
+    private fun flattenNotionBlocks(recordMap: JSONObject): String {
+        return try {
+            val block = recordMap.optJSONObject("block") ?: return ""
+            val keys = block.keys()
+            val texts = mutableListOf<String>()
+
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val wrapper = block.optJSONObject(key) ?: continue
+                val value = wrapper.optJSONObject("value") ?: continue
+                val type = value.optString("type")
+
+                val props = value.optJSONObject("properties")
+                var line = ""
+
+                // 대표적으로 title 속성에 텍스트가 존재하는 경우가 많음
+                line = line.ifBlank { flattenRichText(props?.optJSONArray("title")) }
+
+                // 캡션 등 보조 텍스트
+                if (line.isBlank()) {
+                    line = flattenRichText(props?.optJSONArray("caption"))
+                }
+
+                // 코드 블록도 title에 텍스트가 담기는 경우가 많음
+                if (line.isNotBlank()) {
+                    texts += line
+                } else {
+                    // 타입 기반 힌트 (헤더/목록 등도 title 사용)
+                    if (type.contains("header") || type.contains("list") || type.contains("quote") || type.contains("paragraph")) {
+                        val t = flattenRichText(props?.optJSONArray("title"))
+                        if (t.isNotBlank()) texts += t
+                    }
+                }
+            }
+
+            texts
+                .flatMap { it.lines() }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("\n")
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    // 노션 공유 URL에서 pageId(UUID) 추출
+    private fun extractNotionPageId(url: String): String? {
+        return try {
+            val hyphenRegex = """([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})""".toRegex()
+            val compactRegex = """([0-9a-fA-F]{32})""".toRegex()
+            val hyphenMatch = hyphenRegex.find(url)?.groupValues?.getOrNull(1)
+            val compactMatch = compactRegex.find(url)?.groupValues?.getOrNull(1)
+            val raw = hyphenMatch ?: compactMatch ?: return null
+            raw.replace("-", "").lowercase()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun hyphenatePageId(id32: String): String {
+        val clean = id32.replace("-", "").lowercase()
+        return if (clean.length == 32) {
+            "${clean.substring(0,8)}-${clean.substring(8,12)}-${clean.substring(12,16)}-${clean.substring(16,20)}-${clean.substring(20)}"
+        } else clean
+    }
+
+    // 퍼블릭 Notion recordMap 가져오기 (비공식)
+    private fun fetchNotionPublicRecordMap(pageId: String): JSONObject? {
+        // 순차적으로 여러 엔드포인트/형식을 시도
+        val id32 = pageId.replace("-", "").lowercase()
+        val candidates = listOf(
+            Pair("https://www.notion.so/api/v3/getPublicPageData", """{"pageId":"$id32"}"""),
+            Pair("https://www.notion.so/api/v3/getPublicPageData", """{"pageId":"${hyphenatePageId(id32)}"}"""),
+            Pair("https://www.notion.so/api/v3/loadCachedPageChunk", """{"pageId":"$id32","limit":100,"chunkNumber":0,"verticalColumns":false}""")
+        )
+
+        for ((endpoint, payload) in candidates) {
+            val root = postJson(endpoint, payload) ?: continue
+            val recordMap = root.optJSONObject("recordMap")
+                ?: root.optJSONObject("data")?.optJSONObject("recordMap")
+            if (recordMap != null) {
+                return recordMap
+            }
+        }
+        return null
+    }
+
+    // JSON POST 유틸
+    private fun postJson(urlStr: String, body: String): JSONObject? {
+        return try {
+            val url = URL(urlStr)
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.connectTimeout = 15000
+            conn.readTimeout = 20000
+            conn.doOutput = true
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("User-Agent", "CapyLinker/1.0 (Android; NotionPublicAPI)")
+            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9,ko;q=0.8")
+
+            conn.connect()
+            val writer = java.io.OutputStreamWriter(conn.outputStream, Charsets.UTF_8)
+            writer.write(body)
+            writer.flush()
+            writer.close()
+
+            val code = conn.responseCode
+            if (code !in 200..299) {
+                android.util.Log.e("NotionAPI", "POST $urlStr failed: $code")
+                return null
+            }
+
+            val reader = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8))
+            val sb = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                sb.append(line)
+            }
+            reader.close()
+            JSONObject(sb.toString())
+        } catch (e: Exception) {
+            android.util.Log.e("NotionAPI", "Error POST $urlStr", e)
+            null
+        }
+    }
+
+    // Notion RichText(JSONArray of Arrays) 단순 평탄화
+    private fun flattenRichText(arr: JSONArray?): String {
+        if (arr == null) return ""
+        val sb = StringBuilder()
+        for (i in 0 until arr.length()) {
+            val span = arr.optJSONArray(i) ?: continue
+            val first = span.optString(0)
+            if (first.isNotBlank()) {
+                if (sb.isNotEmpty()) sb.append(" ")
+                sb.append(first)
+            }
+        }
+        return sb.toString().trim()
     }
 
     private fun isRedditUrl(url: String): Boolean {
@@ -841,6 +1163,42 @@ class GeminiRepository @Inject constructor(
                 tags = listOf("reddit", "error"),
                 thumbnailUrl = null
             )
+        }
+    }
+
+    // 외부 프록시(r.jina.ai)를 사용해 SSR된 가독화 텍스트 가져오기
+    private fun fetchReadableContentViaJina(originalUrl: String): String? {
+        return try {
+            val proxyUrl = "https://r.jina.ai/$originalUrl"
+            val url = URL(proxyUrl)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 15000
+            connection.readTimeout = 15000
+            connection.instanceFollowRedirects = true
+
+            // 텍스트 가독화 응답
+            connection.setRequestProperty("User-Agent", "CapyLinker/1.0 (Android; NotionReadable)")
+            connection.setRequestProperty("Accept", "text/plain, */*;q=0.8")
+            connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9,ko;q=0.8")
+
+            connection.connect()
+            if (connection.responseCode != 200) {
+                android.util.Log.e("JinaReadable", "Failed: ${connection.responseCode}")
+                return null
+            }
+
+            val reader = BufferedReader(InputStreamReader(connection.inputStream, Charsets.UTF_8))
+            val sb = StringBuilder()
+            var line: String?
+            while (reader.readLine().also { line = it } != null) {
+                sb.append(line).append('\n')
+            }
+            reader.close()
+            sb.toString().trim()
+        } catch (e: Exception) {
+            android.util.Log.e("JinaReadable", "Error fetching readable content", e)
+            null
         }
     }
 
