@@ -291,8 +291,17 @@ class GeminiRepository @Inject constructor(
     }
 
     private fun isNotionUrl(url: String): Boolean {
-        return url.contains("notion.so", ignoreCase = true) || 
-               url.contains("notion.site", ignoreCase = true)
+        return url.contains("notion.so", ignoreCase = true) ||
+               url.contains("notion.site", ignoreCase = true) ||
+               url.contains("x.com", ignoreCase = true) ||
+               url.contains("open.spotify.com", ignoreCase = true) ||
+               url.contains("spotify.com", ignoreCase = true) ||
+               url.contains("twitter.com", ignoreCase = true) ||
+               url.contains("mobile.twitter.com", ignoreCase = true)
+    }
+
+    private fun isGitHubUrl(url: String): Boolean {
+        return url.contains("github.com", ignoreCase = true)
     }
 
     private fun extractGitHubRepoInfo(url: String): Pair<String, String>? {
@@ -586,11 +595,13 @@ class GeminiRepository @Inject constructor(
 
     private suspend fun analyzeNotionPage(url: String, maxRetries: Int): AnalysisResult {
         return try {
-            // 노션 URL 정리 (?source 등 제거 후 SSR 힌트 부여)
+            // URL 정리 (?source 등 제거). Notion은 SSR 힌트(pvs=4) 적용
             val cleanUrl = url.substringBefore("?")
-            val targetUrl = "$cleanUrl?pvs=4"
+            val isNotionDomain = cleanUrl.contains("notion.so", ignoreCase = true) ||
+                cleanUrl.contains("notion.site", ignoreCase = true)
+            val targetUrl = if (isNotionDomain) "$cleanUrl?pvs=4" else cleanUrl
 
-            android.util.Log.d("NotionAnalysis", "Notion page detected: $targetUrl")
+            android.util.Log.d("NotionAnalysis", "Dynamic page detected: $targetUrl")
 
             // 0) r.jina.ai 가독화 텍스트 우선 시도 (가장 안정적으로 본문을 반환함)
             val jinaPrimary = fetchReadableContentViaJina(targetUrl)?.trim().orEmpty()
@@ -660,7 +671,7 @@ class GeminiRepository @Inject constructor(
                 // 본문 첫 줄을 보조 타이틀로 사용
                 title = bodyText.lineSequence().firstOrNull { it.isNotBlank() }?.take(80)?.trim().orElse("")
             }
-            if (title.isBlank()) title = "Notion Page"
+            if (title.isBlank()) title = "Web Page"
 
             val thumbnailUrl = doc?.selectFirst("meta[property=og:image]")?.attr("content")
                 ?: doc?.selectFirst("meta[name=twitter:image]")?.attr("content")
@@ -669,16 +680,16 @@ class GeminiRepository @Inject constructor(
             if (bodyText.isBlank()) {
                 val language = settingsRepository.language.first()
                 val msg = when (language) {
-                    "ko" -> "노션 페이지의 본문을 가져오지 못했습니다. 브라우저에서 열어 확인해주세요."
-                    "ja" -> "Notionページの本文を取得できませんでした。ブラウザで開いて確認してください。"
-                    "zh-CN" -> "未能获取 Notion 页面的正文。请在浏览器中查看。"
-                    "zh-TW" -> "未能取得 Notion 頁面的內文。請在瀏覽器中查看。"
-                    "es" -> "No se pudo obtener el contenido de la página de Notion. Ábrela en el navegador."
-                    "fr" -> "Impossible d’obtenir le contenu de la page Notion. Ouvrez-la dans le navigateur."
-                    "de" -> "Der Inhalt der Notion-Seite konnte nicht abgerufen werden. Bitte im Browser prüfen."
-                    "ru" -> "Не удалось получить содержимое страницы Notion. Откройте в браузере."
-                    "pt" -> "Não foi possível obter o conteúdo da página do Notion. Abra no navegador."
-                    else -> "Could not fetch the Notion page content. Please open it in the browser."
+                    "ko" -> "페이지의 본문을 가져오지 못했습니다. 브라우저에서 열어 확인해주세요."
+                    "ja" -> "ページの本文を取得できませんでした。ブラウザで開いて確認してください。"
+                    "zh-CN" -> "未能获取页面的正文。请在浏览器中查看。"
+                    "zh-TW" -> "未能取得頁面的內文。請在瀏覽器中查看。"
+                    "es" -> "No se pudo obtener el contenido de la página. Ábrela en el navegador."
+                    "fr" -> "Impossible d’obtenir le contenu de la page. Ouvrez-la dans le navigateur."
+                    "de" -> "Der Seiteninhalt konnte nicht abgerufen werden. Bitte im Browser prüfen."
+                    "ru" -> "Не удалось получить содержимое страницы. Откройте в браузере."
+                    "pt" -> "Não foi possível obter o conteúdo da página. Abra no navegador."
+                    else -> "Could not fetch the page content. Please open it in the browser."
                 }
                 return AnalysisResult(title = title, summary = msg, tags = emptyList(), thumbnailUrl = thumbnailUrl)
             }
@@ -704,7 +715,7 @@ class GeminiRepository @Inject constructor(
             val prompt = """
                 $languageInstruction
 
-                Analyze the following Notion page content and provide:
+                Analyze the following page content and provide:
                 1. A short title (one sentence)
                 2. A detailed summary (max 200 words)
                 3. 3 relevant keywords or tags
