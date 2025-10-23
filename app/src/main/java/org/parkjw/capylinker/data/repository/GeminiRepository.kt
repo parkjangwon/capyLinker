@@ -67,8 +67,8 @@ class GeminiRepository @Inject constructor(
                     return@withContext analyzeRedditPost(url, maxRetries)
                 }
 
-                // Notion 링크 확인
-                if (isNotionUrl(url)) {
+                // 다이나믹 링크 확인
+                if (isDynamicContentUrl(url)) {
                     return@withContext analyzeNotionPage(url, maxRetries)
                 }
 
@@ -290,15 +290,15 @@ class GeminiRepository @Inject constructor(
         return content.toString()
     }
 
-    private fun isNotionUrl(url: String): Boolean {
+    private fun isDynamicContentUrl(url: String): Boolean {
         return url.contains("notion.so", ignoreCase = true) ||
                url.contains("notion.site", ignoreCase = true) ||
-               url.contains("x.com", ignoreCase = true) ||
+               url.contains("blog.naver.com", ignoreCase = true) ||
+               url.contains("cafe.naver.com", ignoreCase = true) ||
                url.contains("brunch.co.kr", ignoreCase = true) ||
-               url.contains("open.spotify.com", ignoreCase = true) ||
                url.contains("spotify.com", ignoreCase = true) ||
-               url.contains("twitter.com", ignoreCase = true) ||
-               url.contains("mobile.twitter.com", ignoreCase = true)
+               url.contains("x.com", ignoreCase = true) ||
+               url.contains("twitter.com", ignoreCase = true)
     }
 
     private fun isGitHubUrl(url: String): Boolean {
