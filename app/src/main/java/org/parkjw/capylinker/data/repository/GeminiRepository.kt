@@ -295,10 +295,6 @@ class GeminiRepository @Inject constructor(
                url.contains("notion.site", ignoreCase = true)
     }
 
-    private fun isGitHubUrl(url: String): Boolean {
-        return url.contains("github.com", ignoreCase = true)
-    }
-
     private fun extractGitHubRepoInfo(url: String): Pair<String, String>? {
         return try {
             // https://github.com/owner/repo 형식
