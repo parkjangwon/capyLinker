@@ -294,6 +294,7 @@ class GeminiRepository @Inject constructor(
         return url.contains("notion.so", ignoreCase = true) ||
                url.contains("notion.site", ignoreCase = true) ||
                url.contains("x.com", ignoreCase = true) ||
+               url.contains("brunch.co.kr", ignoreCase = true) ||
                url.contains("open.spotify.com", ignoreCase = true) ||
                url.contains("spotify.com", ignoreCase = true) ||
                url.contains("twitter.com", ignoreCase = true) ||
