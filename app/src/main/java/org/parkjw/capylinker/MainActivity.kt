@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
             CapyLinkerTheme(darkTheme = darkTheme) {
                 Scaffold {
-                    Column(Modifier.padding(it)) {
+                    Column {
                         AppNavHost(
                             modifier = Modifier.weight(1f)
                         )
