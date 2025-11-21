@@ -22,6 +22,7 @@
 - **Clipboard Auto-Detection**: Automatically detects URLs in clipboard when opening the app (can be toggled in settings)
 - **Background Processing**: Links are analyzed asynchronously without blocking the UI
 - **Visual Thumbnails**: Automatically extracts and displays Open Graph images or representative thumbnails for each link
+- **QR Code Generation**: Generate and share a QR code for any link, complete with an embedded app icon.
 - **Unified Search**: Search across titles, summaries, URLs, and tags with real-time filtering
 - **Tag Filtering**: Filter saved links by tags for easy organization
 - **Expandable Cards**: Tap to expand/collapse full summaries
@@ -29,6 +30,7 @@
   - **Open**: Launch URL in default browser
   - **Copy URL**: Copy link to clipboard
   - **Share**: Share link via system share menu
+  - **Share as QR Code**: Share a QR code image of the link.
   - **Re-summarize**: Re-run Gemini analysis to get a fresh summary
   - **Delete**: Remove link from collection
 
@@ -201,6 +203,7 @@ Long-press any link to access quick actions:
 - **Open**: Opens the URL in your default browser
 - **Copy URL**: Copies the link to clipboard
 - **Share**: Share via system share menu
+- **Share as QR Code**: Share a QR code image of the link.
 - **Re-summarize**: Re-run Gemini analysis to get a fresh summary
 - **Delete**: Removes the link from your collection
 
