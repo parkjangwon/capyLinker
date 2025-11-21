@@ -138,6 +138,9 @@ dependencies {
     // Jsoup for HTML parsing
     implementation("org.jsoup:jsoup:1.17.2")
 
+    // ZXing for QR code generation
+    implementation("com.google.zxing:core:3.5.2")
+
     // Test
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
