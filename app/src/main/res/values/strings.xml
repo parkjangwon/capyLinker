@@ -1,4 +1,6 @@
 <resources>
+    <string name="qr_code_image">QR 코드 이미지</string>
+    <string name="share_qr_code">공유하기</string>
     <string name="app_name">CapyLinker</string>
 
     <!-- Developer Information -->
