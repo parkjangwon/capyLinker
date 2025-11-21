@@ -6,6 +6,14 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -22,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.content.ContextCompat
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import java.io.File
@@ -183,7 +192,7 @@ fun QRCodeDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val qrBitmap = remember(url) { generateQRCode(url) }
+    val qrBitmap = remember(url) { generateQRCode(context, url) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -224,13 +233,13 @@ fun QRCodeDialog(
     )
 }
 
-private fun generateQRCode(content: String): Bitmap? {
+private fun generateQRCode(context: Context, content: String): Bitmap? {
     return try {
         val writer = QRCodeWriter()
         val bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, 512, 512)
         val width = bitMatrix.width
         val height = bitMatrix.height
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 
         for (x in 0 until width) {
             for (y in 0 until height) {
@@ -241,11 +250,85 @@ private fun generateQRCode(content: String): Bitmap? {
                 )
             }
         }
-        bitmap
+
+        // 앱 아이콘을 가져와 QR 코드 중앙에 삽입
+        addLogoToQRCode(context, bitmap)
     } catch (e: Exception) {
         e.printStackTrace()
         null
     }
+}
+
+private fun addLogoToQRCode(context: Context, qrBitmap: Bitmap): Bitmap {
+    return try {
+        val iconDrawable = ContextCompat.getDrawable(context, org.parkjw.capylinker.R.mipmap.ic_launcher)
+        val iconBitmap = if (iconDrawable is BitmapDrawable) {
+            iconDrawable.bitmap
+        } else {
+            val bitmap = Bitmap.createBitmap(
+                iconDrawable?.intrinsicWidth ?: 100,
+                iconDrawable?.intrinsicHeight ?: 100,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            iconDrawable?.setBounds(0, 0, canvas.width, canvas.height)
+            iconDrawable?.draw(canvas)
+            bitmap
+        }
+
+        // 아이콘을 흑백으로 변환
+        val grayscaleIcon = convertToGrayscale(iconBitmap)
+
+        // QR 코드 중앙에 배치할 아이콘 크기 계산 (QR 코드의 약 20%)
+        val logoSize = (qrBitmap.width * 0.2).toInt()
+        val scaledLogo = Bitmap.createScaledBitmap(grayscaleIcon, logoSize, logoSize, true)
+
+        // 흰색 배경이 있는 로고 생성 (더 잘 보이도록)
+        val logoWithBackground = Bitmap.createBitmap(logoSize, logoSize, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(logoWithBackground)
+
+        // 흰색 원형 배경 그리기
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            style = Paint.Style.FILL
+        }
+        val padding = logoSize * 0.1f
+        canvas.drawRoundRect(
+            RectF(padding, padding, logoSize - padding, logoSize - padding),
+            logoSize * 0.15f,
+            logoSize * 0.15f,
+            paint
+        )
+
+        // 로고 그리기
+        val logoPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        canvas.drawBitmap(scaledLogo, 0f, 0f, logoPaint)
+
+        // 최종 QR 코드에 로고 합성
+        val combinedBitmap = qrBitmap.copy(Bitmap.Config.ARGB_8888, true)
+        val finalCanvas = Canvas(combinedBitmap)
+
+        val left = (qrBitmap.width - logoSize) / 2f
+        val top = (qrBitmap.height - logoSize) / 2f
+        finalCanvas.drawBitmap(logoWithBackground, left, top, null)
+
+        combinedBitmap
+    } catch (e: Exception) {
+        e.printStackTrace()
+        qrBitmap
+    }
+}
+
+private fun convertToGrayscale(bitmap: Bitmap): Bitmap {
+    val grayscaleBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(grayscaleBitmap)
+    val paint = Paint().apply {
+        colorFilter = ColorMatrixColorFilter(ColorMatrix().apply {
+            setSaturation(0f)
+        })
+    }
+    canvas.drawBitmap(bitmap, 0f, 0f, paint)
+    return grayscaleBitmap
 }
 
 private fun shareQRCode(context: Context, bitmap: Bitmap) {
