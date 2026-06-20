@@ -240,3 +240,31 @@ debug-keystore.jks
 .history
 .svn/
 migrate_working_dir/
+
+# Coding agents and local code indexes
+.codegraph/
+.cursor/
+.codex/
+.claude/
+.continue/
+.aider*
+.windsurf/
+.roo/
+.crush/
+.amp/
+.serena/
+.qodo/
+.tabnine/
+.zed/
+
+# Agent scratch and transcript files
+.agent/
+.agents/
+.ai/
+.llm/
+.prompts/tmp/
+*.prompt.md.tmp
+
+# If a project intentionally wants shared agent rules, unignore the exact file.
+# !.cursor/rules/
+# !.cursor/rules/*.mdc

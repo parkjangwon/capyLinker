@@ -6,7 +6,6 @@ plugins {
     id("org.jetbrains.kotlin.android") version "1.9.22"
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     id("com.google.dagger.hilt.android") version "2.48"
-    kotlin("kapt") version "1.9.22"
     kotlin("plugin.serialization") version "1.9.22"
 }
 
@@ -25,8 +24,8 @@ android {
         applicationId = "org.parkjw.capylinker"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.1.6"
+        versionCode = 8
+        versionName = "1.1.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -98,7 +97,7 @@ dependencies {
     // Gson for Room type converter
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-android-compiler:2.48")
+    ksp("com.google.dagger:hilt-android-compiler:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     // Core
     implementation("androidx.core:core-ktx:1.12.0")
@@ -125,9 +124,6 @@ dependencies {
 
     // DataStore (Settings)
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-
-    // Google AI (Gemini)
-    implementation("com.google.ai.client.generativeai:generativeai:0.2.2")
 
     // Google Mobile Ads
     implementation("com.google.android.gms:play-services-ads:23.0.0")

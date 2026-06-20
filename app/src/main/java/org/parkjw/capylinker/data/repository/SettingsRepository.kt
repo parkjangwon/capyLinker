@@ -18,7 +18,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 @Singleton
 class SettingsRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val settingsCipher: SettingsCipher
 ) {
     private object PreferencesKeys {
         val GEMINI_API_KEY = stringPreferencesKey("gemini_api_key")
@@ -30,12 +31,12 @@ class SettingsRepository @Inject constructor(
 
     val apiKey: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferencesKeys.GEMINI_API_KEY] ?: ""
+            decryptApiKey(preferences[PreferencesKeys.GEMINI_API_KEY])
         }
 
     val geminiModel: Flow<String> = context.dataStore.data
         .map { preferences ->
-            preferences[PreferencesKeys.GEMINI_MODEL] ?: "gemini-2.5-flash-lite"
+            normalizeGeminiModel(preferences[PreferencesKeys.GEMINI_MODEL])
         }
 
     val language: Flow<String> = context.dataStore.data
@@ -55,7 +56,16 @@ class SettingsRepository @Inject constructor(
 
     suspend fun saveApiKey(apiKey: String) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.GEMINI_API_KEY] = apiKey
+            preferences[PreferencesKeys.GEMINI_API_KEY] = settingsCipher.encrypt(apiKey)
+        }
+    }
+
+    suspend fun encryptStoredApiKeyIfNeeded() {
+        context.dataStore.edit { preferences ->
+            val storedApiKey = preferences[PreferencesKeys.GEMINI_API_KEY]
+            if (!storedApiKey.isNullOrBlank() && !settingsCipher.isEncrypted(storedApiKey)) {
+                preferences[PreferencesKeys.GEMINI_API_KEY] = settingsCipher.encrypt(storedApiKey)
+            }
         }
     }
 
@@ -86,8 +96,8 @@ class SettingsRepository @Inject constructor(
     suspend fun getAllSettings(): Map<String, Any> {
         val preferences = context.dataStore.data.first()
         return mapOf(
-            "apiKey" to (preferences[PreferencesKeys.GEMINI_API_KEY] ?: ""),
-            "geminiModel" to (preferences[PreferencesKeys.GEMINI_MODEL] ?: "gemini-2.5-flash-lite"),
+            "apiKey" to decryptApiKey(preferences[PreferencesKeys.GEMINI_API_KEY]),
+            "geminiModel" to normalizeGeminiModel(preferences[PreferencesKeys.GEMINI_MODEL]),
             "language" to (preferences[PreferencesKeys.LANGUAGE] ?: "en"),
             "theme" to (preferences[PreferencesKeys.THEME] ?: "system"),
             "clipboardAutoAdd" to (preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] ?: true)
@@ -96,11 +106,27 @@ class SettingsRepository @Inject constructor(
 
     suspend fun restoreAllSettings(settings: Map<String, Any>) {
         context.dataStore.edit { preferences ->
-            (settings["apiKey"] as? String)?.let { preferences[PreferencesKeys.GEMINI_API_KEY] = it }
+            (settings["apiKey"] as? String)?.let { preferences[PreferencesKeys.GEMINI_API_KEY] = settingsCipher.encrypt(it) }
             (settings["geminiModel"] as? String)?.let { preferences[PreferencesKeys.GEMINI_MODEL] = it }
             (settings["language"] as? String)?.let { preferences[PreferencesKeys.LANGUAGE] = it }
             (settings["theme"] as? String)?.let { preferences[PreferencesKeys.THEME] = it }
             (settings["clipboardAutoAdd"] as? Boolean)?.let { preferences[PreferencesKeys.CLIPBOARD_AUTO_ADD] = it }
         }
+    }
+
+    companion object {
+        const val DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
+        val SUPPORTED_GEMINI_MODELS = setOf(
+            "gemini-3.1-flash-lite",
+            DEFAULT_GEMINI_MODEL
+        )
+    }
+
+    private fun normalizeGeminiModel(model: String?): String {
+        return model?.takeIf { it in SUPPORTED_GEMINI_MODELS } ?: DEFAULT_GEMINI_MODEL
+    }
+
+    private fun decryptApiKey(storedValue: String?): String {
+        return settingsCipher.decrypt(storedValue)
     }
 }

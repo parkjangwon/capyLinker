@@ -56,7 +56,7 @@ The app supports 10 languages with full UI translation:
 ### 🎨 Customization
 - **Theme Options**: System default, Light mode, or Dark mode
 - **Language Settings**: Choose your preferred language (10 languages supported)
-- **Gemini Model Selection**: Choose between Gemini 2.5 Flash Lite, Flash, or Pro models
+- **Gemini Model Selection**: Choose between Gemini 3.1 Flash-Lite and Gemini 3.5 Flash models
 - **Clipboard Auto-Add**: Toggle automatic URL detection from clipboard
 - **Persistent Settings**: All preferences are saved locally
 
@@ -85,6 +85,7 @@ The app supports 10 languages with full UI translation:
 ### Prerequisites
 - Android device/emulator running Android 15 (API 35) or higher
 - Android Studio (for development)
+- JDK 25 for Gradle builds (the Android app bytecode target remains Java 17)
 - Google Gemini API key (free tier available)
 
 ### Installation
@@ -104,6 +105,10 @@ The app supports 10 languages with full UI translation:
    - Sync Gradle files
    - Connect your Android device or start an emulator
    - Click "Run" or press `Shift + F10`
+   - CLI builds use Gradle 9.1.0 with JDK 25:
+     ```bash
+     ./gradlew :app:assembleDebug
+     ```
 
 ### Setting Up Gemini API
 
@@ -123,16 +128,15 @@ CapyLinker requires a Google Gemini API key to enable AI-powered features.
 3. Scroll to **"Gemini API Configuration"**
 4. Paste your API key in the text field
 5. **Select your preferred Gemini model**:
-   - **Gemini 2.5 Flash Lite** (Default): Fastest, best for most use cases
-   - **Gemini 2.5 Flash**: Balanced speed and quality
-   - **Gemini 2.5 Pro**: Highest quality, slower but more detailed analysis
+   - **Gemini 3.5 Flash** (Default): Best balance for link summaries and tagging
+   - **Gemini 3.1 Flash-Lite**: Fast, cost-conscious option for lightweight summaries
 6. Tap **"Save API Key"**
 
 > **💡 Tip**: The free tier allows 15 requests per minute. If you hit the rate limit, the app automatically retries after a short delay.
 
 #### API Key Storage & Privacy
 - ✅ Your API key is stored **locally** on your device only
-- ✅ Encrypted using Android's secure DataStore
+- ✅ Encrypted with Android Keystore before being stored in DataStore
 - ✅ Never transmitted to any server except Google Gemini API
 - ✅ Never shared with third parties
 - ✅ You can delete it anytime from Settings

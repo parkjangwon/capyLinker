@@ -1,7 +1,5 @@
 package org.parkjw.capylinker.data.repository
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.GenerateContentResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -25,26 +23,12 @@ data class AnalysisResult(
 @Singleton
 class GeminiRepository @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val webPageContentFetcher: WebPageContentFetcher
+    private val webPageContentFetcher: WebPageContentFetcher,
+    private val geminiApiClient: GeminiApiClient
 ) {
-    private var generativeModel: GenerativeModel? = null
-
-    private suspend fun initializeModel() {
-        val apiKey = settingsRepository.apiKey.first()
-        val modelName = settingsRepository.geminiModel.first()
-        if (apiKey.isNotBlank()) {
-            generativeModel = GenerativeModel(
-                modelName = modelName,
-                apiKey = apiKey
-            )
-        }
-    }
-
     suspend fun analyzeUrl(url: String, maxRetries: Int = 3): AnalysisResult? {
-        if (generativeModel == null) {
-            initializeModel()
-        }
-        if (generativeModel == null) {
+        settingsRepository.encryptStoredApiKeyIfNeeded()
+        if (settingsRepository.apiKey.first().isBlank()) {
             return AnalysisResult("No title", "API key not set", emptyList(), null)
         }
 
@@ -118,42 +102,7 @@ class GeminiRepository @Inject constructor(
                     Content: $truncatedContent
                 """.trimIndent()
 
-                // 재시도 로직
-                var lastException: Exception? = null
-                repeat(maxRetries) { attempt ->
-                    try {
-                        val response = generativeModel!!.generateContent(prompt)
-                        return@withContext parseResponse(response, thumbnailUrl)
-                    } catch (e: Exception) {
-                        lastException = e
-                        val errorMessage = e.message ?: ""
-
-                        // 할당량 초과 에러 체크
-                        if (errorMessage.contains("quota", ignoreCase = true) || 
-                            errorMessage.contains("rate limit", ignoreCase = true)) {
-
-                            // 재시도 지연 시간 추출 (예: "Please retry in 1.81658277s")
-                            val retryDelay = extractRetryDelay(errorMessage)
-
-                            if (attempt < maxRetries - 1) {
-                                kotlinx.coroutines.delay((retryDelay * 1000).toLong())
-                            } else {
-                                return@withContext AnalysisResult(
-                                    "Quota Exceeded",
-                                    "API quota exceeded. Please try again later or upgrade your plan.",
-                                    emptyList(),
-                                    thumbnailUrl
-                                )
-                            }
-                        } else {
-                            // 다른 에러는 즉시 반환
-                            throw e
-                        }
-                    }
-                }
-
-                // 모든 재시도 실패
-                AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), thumbnailUrl)
+                generateWithRetries(prompt, thumbnailUrl, maxRetries)
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -176,8 +125,45 @@ class GeminiRepository @Inject constructor(
         return match?.groupValues?.getOrNull(1)?.toDoubleOrNull() ?: 2.0
     }
 
-    private fun parseResponse(response: GenerateContentResponse, thumbnailUrl: String?): AnalysisResult {
-        val text = response.text ?: return AnalysisResult("", "Empty response from API", emptyList(), thumbnailUrl)
+    private suspend fun generateWithRetries(
+        prompt: String,
+        thumbnailUrl: String?,
+        maxRetries: Int
+    ): AnalysisResult {
+        var lastException: Exception? = null
+        repeat(maxRetries) { attempt ->
+            try {
+                val text = geminiApiClient.generateContent(
+                    apiKey = settingsRepository.apiKey.first(),
+                    modelName = settingsRepository.geminiModel.first(),
+                    prompt = prompt
+                )
+                return parseResponse(text, thumbnailUrl)
+            } catch (e: Exception) {
+                lastException = e
+                val errorMessage = e.message.orEmpty()
+                if (errorMessage.contains("quota", ignoreCase = true) ||
+                    errorMessage.contains("rate limit", ignoreCase = true)
+                ) {
+                    if (attempt < maxRetries - 1) {
+                        kotlinx.coroutines.delay((extractRetryDelay(errorMessage) * 1000).toLong())
+                    } else {
+                        return AnalysisResult(
+                            "Quota Exceeded",
+                            "API quota exceeded. Please try again later.",
+                            emptyList(),
+                            thumbnailUrl
+                        )
+                    }
+                } else {
+                    throw e
+                }
+            }
+        }
+        return AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), thumbnailUrl)
+    }
+
+    private fun parseResponse(text: String, thumbnailUrl: String?): AnalysisResult {
         val titlePrefix = "TITLE:"
         val summaryPrefix = "SUMMARY:"
         val tagsPrefix = "TAGS:"
@@ -438,35 +424,7 @@ class GeminiRepository @Inject constructor(
                 Video URL: $originalUrl
             """.trimIndent()
 
-            var lastException: Exception? = null
-            repeat(maxRetries) { attempt ->
-                try {
-                    val response = generativeModel!!.generateContent(prompt)
-                    return parseResponse(response, thumbnailUrl)
-                } catch (e: Exception) {
-                    lastException = e
-                    val errorMessage = e.message ?: ""
-
-                    if (errorMessage.contains("quota", ignoreCase = true) || 
-                        errorMessage.contains("rate limit", ignoreCase = true)) {
-                        val retryDelay = extractRetryDelay(errorMessage)
-                        if (attempt < maxRetries - 1) {
-                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
-                        } else {
-                            return AnalysisResult(
-                                "Quota Exceeded",
-                                "API quota exceeded. Please try again later.",
-                                emptyList(),
-                                thumbnailUrl
-                            )
-                        }
-                    } else {
-                        throw e
-                    }
-                }
-            }
-
-            AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), thumbnailUrl)
+            generateWithRetries(prompt, thumbnailUrl, maxRetries)
         } catch (e: Exception) {
             e.printStackTrace()
             AnalysisResult("Error", "Failed to analyze YouTube video: ${e.message}", emptyList(), null)
@@ -558,35 +516,7 @@ class GeminiRepository @Inject constructor(
                 $truncatedReadme
             """.trimIndent()
 
-            var lastException: Exception? = null
-            repeat(maxRetries) { attempt ->
-                try {
-                    val response = generativeModel!!.generateContent(prompt)
-                    return parseResponse(response, "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png")
-                } catch (e: Exception) {
-                    lastException = e
-                    val errorMessage = e.message ?: ""
-
-                    if (errorMessage.contains("quota", ignoreCase = true) || 
-                        errorMessage.contains("rate limit", ignoreCase = true)) {
-                        val retryDelay = extractRetryDelay(errorMessage)
-                        if (attempt < maxRetries - 1) {
-                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
-                        } else {
-                            return AnalysisResult(
-                                "Quota Exceeded",
-                                "API quota exceeded. Please try again later.",
-                                emptyList(),
-                                "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                            )
-                        }
-                    } else {
-                        throw e
-                    }
-                }
-            }
-
-            AnalysisResult("Error", "Failed after $maxRetries attempts: ${lastException?.message}", emptyList(), null)
+            generateWithRetries(prompt, "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png", maxRetries)
         } catch (e: Exception) {
             android.util.Log.e("GitHubAnalysis", "Error analyzing GitHub repository", e)
             AnalysisResult(
@@ -736,39 +666,7 @@ class GeminiRepository @Inject constructor(
                 Source URL: $cleanUrl
             """.trimIndent()
 
-            var lastException: Exception? = null
-            repeat(maxRetries) { attempt ->
-                try {
-                    val response = generativeModel!!.generateContent(prompt)
-                    return parseResponse(response, thumbnailUrl)
-                } catch (e: Exception) {
-                    lastException = e
-                    val errorMessage = e.message ?: ""
-                    if (errorMessage.contains("quota", ignoreCase = true) ||
-                        errorMessage.contains("rate limit", ignoreCase = true)) {
-                        val retryDelay = extractRetryDelay(errorMessage)
-                        if (attempt < maxRetries - 1) {
-                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
-                        } else {
-                            return AnalysisResult(
-                                "Quota Exceeded",
-                                "API quota exceeded. Please try again later.",
-                                emptyList(),
-                                thumbnailUrl
-                            )
-                        }
-                    } else {
-                        throw e
-                    }
-                }
-            }
-
-            AnalysisResult(
-                "Error",
-                "Failed after $maxRetries attempts: ${lastException?.message}",
-                emptyList(),
-                thumbnailUrl
-            )
+            generateWithRetries(prompt, thumbnailUrl, maxRetries)
         } catch (e: Exception) {
             android.util.Log.e("NotionAnalysis", "Error processing Notion page", e)
             AnalysisResult(
@@ -1133,40 +1031,7 @@ class GeminiRepository @Inject constructor(
                 Post URL: $url
             """.trimIndent()
 
-            var lastException: Exception? = null
-            repeat(maxRetries) { attempt ->
-                try {
-                    val response = generativeModel!!.generateContent(prompt)
-                    return parseResponse(response, thumbnailUrl)
-                } catch (e: Exception) {
-                    lastException = e
-                    val errorMessage = e.message ?: ""
-
-                    if (errorMessage.contains("quota", ignoreCase = true) ||
-                        errorMessage.contains("rate limit", ignoreCase = true)) {
-                        val retryDelay = extractRetryDelay(errorMessage)
-                        if (attempt < maxRetries - 1) {
-                            kotlinx.coroutines.delay((retryDelay * 1000).toLong())
-                        } else {
-                            return AnalysisResult(
-                                "Quota Exceeded",
-                                "API quota exceeded. Please try again later.",
-                                emptyList(),
-                                thumbnailUrl
-                            )
-                        }
-                    } else {
-                        throw e
-                    }
-                }
-            }
-
-            AnalysisResult(
-                "Error",
-                "Failed after $maxRetries attempts: ${lastException?.message}",
-                emptyList(),
-                thumbnailUrl
-            )
+            generateWithRetries(prompt, thumbnailUrl, maxRetries)
         } catch (e: Exception) {
             android.util.Log.e("RedditAnalysis", "Error analyzing Reddit post", e)
             AnalysisResult(

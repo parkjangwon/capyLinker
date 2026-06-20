@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import org.parkjw.capylinker.data.repository.SettingsRepository
 import kotlinx.coroutines.launch
 import org.parkjw.capylinker.viewmodel.SettingsViewModel
 
@@ -25,11 +26,11 @@ fun SettingsScreen(
     viewModel: SettingsViewModel
 ) {
     val apiKey by viewModel.apiKey.collectAsState(initial = "")
-    val geminiModel by viewModel.geminiModel.collectAsState(initial = "gemini-2.5-flash-lite")
+    val geminiModel by viewModel.geminiModel.collectAsState(initial = SettingsRepository.DEFAULT_GEMINI_MODEL)
     val language by viewModel.language.collectAsState(initial = "en")
     val theme by viewModel.theme.collectAsState(initial = "system")
     var tempApiKey by remember { mutableStateOf("") }
-    var selectedModel by remember { mutableStateOf("gemini-2.5-flash-lite") }
+    var selectedModel by remember { mutableStateOf(SettingsRepository.DEFAULT_GEMINI_MODEL) }
     var selectedLanguage by remember { mutableStateOf("en") }
     var selectedTheme by remember { mutableStateOf("system") }
     var showSaveConfirmation by remember { mutableStateOf(false) }
@@ -283,9 +284,8 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             val availableModels = listOf(
-                "gemini-2.5-flash-lite" to "Gemini 2.5 Flash Lite",
-                "gemini-2.5-flash" to "Gemini 2.5 Flash",
-                "gemini-2.5-pro" to "Gemini 2.5 Pro"
+                "gemini-3.1-flash-lite" to "Gemini 3.1 Flash-Lite",
+                "gemini-3.5-flash" to "Gemini 3.5 Flash"
             )
 
             ExposedDropdownMenuBox(
@@ -293,8 +293,8 @@ fun SettingsScreen(
                 onExpandedChange = { expandedModel = !expandedModel }
             ) {
                 OutlinedTextField(
-                    value = availableModels.find { it.first == selectedModel }?.second 
-                        ?: "Gemini 2.5 Flash Lite",
+                    value = availableModels.find { it.first == selectedModel }?.second
+                        ?: "Gemini 3.5 Flash",
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(strings.modelLabel) },
